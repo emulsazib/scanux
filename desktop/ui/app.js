@@ -1,26 +1,142 @@
-// Scanu desktop UI: polls the API for PROPOSED actions and records the user's
-// Tier-2 choice. All telemetry-derived strings are inserted with textContent.
+// Scanu desktop UI.
+// Local sensor link (Windows named pipe via Tauri): scans, threats, local actions.
+// Optional Scanu cloud (Settings): Tier-2/3 decisions signed by the cloud.
+// All telemetry-derived strings are inserted with textContent, never HTML.
+
 const store = {
   get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
 };
-const cfg = () => ({ api: store.get("scanu.api", "http://127.0.0.1:8000"), token: store.get("scanu.token", "dev-owner-token") });
+const tauri = window.__TAURI__;
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const fileName = (p) => String(p || "").split(/[\\/]/).pop();
 
+// ------------------------------------------------------------ sensor link
+let sensor = { linked: false, status: null };
+async function sensorRequest(request) {
+  if (!tauri?.core) throw new Error("Not running in the Scanu app");
+  return tauri.core.invoke("sensor_request", { request });
+}
+
+function renderStatus() {
+  const pill = $("status");
+  const label = pill.lastElementChild;
+  if (!tauri?.core) { pill.className = "pill"; label.textContent = "Browser preview"; return; }
+  if (!sensor.linked) { pill.className = "pill warn"; label.textContent = "Sensor not running"; return; }
+  const s = sensor.status;
+  pill.className = "pill ok";
+  label.textContent = s?.cloud ? "Protected · cloud linked" : "Protected";
+  if (s) $("sensor-info").textContent =
+    `Device ${s.device_id} · sensor ${s.version} · ${s.driver ? "kernel driver active" : "ETW mode (no kernel driver)"} · ${s.cloud ? "linked to cloud" : "standalone"}`;
+}
+
+// Threats the sensor flagged (scan findings, frozen processes).
+const threats = new Map();
+function renderThreats() {
+  const box = $("threats");
+  box.replaceChildren(...[...threats.values()].map((t) => {
+    const card = el("article", "card threat");
+    const head = el("div", "row");
+    head.append(el("span", `pill ${t.severity >= 4 ? "crit" : "high"}`, t.severity >= 4 ? "critical" : "high"),
+                el("span", "title", fileName(t.path) || "Unknown program"));
+    const what = { known_malware: "Matches known malware", suspicious_executable: "Looks like malware to the on-device model",
+                   ransomware_canary: "Behaved like ransomware: it was paused and cut off from the network" }[t.summary] || t.summary;
+    const actions = el("div", "actions");
+    const result = el("div", "muted");
+    const act = (label, action, primary) => {
+      const b = el("button", `btn ${primary ? "primary" : ""}`, label);
+      b.addEventListener("click", async () => {
+        actions.querySelectorAll("button").forEach((x) => (x.disabled = true));
+        result.textContent = "Working…";
+        try { await sensorRequest({ cmd: action, alert_id: t.alert_id }); }
+        catch (e) { result.textContent = String(e); actions.querySelectorAll("button").forEach((x) => (x.disabled = false)); }
+      });
+      return b;
+    };
+    if (t.can_terminate) actions.append(act("Stop program", "terminate", !t.can_quarantine));
+    if (t.can_quarantine) actions.append(act("Quarantine file", "quarantine", true));
+    card.append(head, el("div", "muted", what), el("div", "path", t.path || ""), actions, result);
+    t.resultEl = result;
+    return card;
+  }));
+  $("threats-section").hidden = threats.size === 0;
+}
+
+let localScan = null;
+function renderScan(s) {
+  localScan = s && s.state === "running" ? s : null;
+  document.querySelectorAll("button[data-scope]").forEach((b) => (b.disabled = !!localScan));
+  $("scan-status").hidden = !localScan;
+  if (localScan) {
+    $("scan-label").textContent = "Scanning…";
+    $("scan-stats").replaceChildren(...[["Files", s.files_seen], ["Threats", s.findings]].map(([k, v]) => {
+      const d = el("div"); const b = el("b", k === "Threats" && v > 0 ? "crit" : "", Number(v).toLocaleString()); d.append(b, k); return d;
+    }));
+  } else if (s) {
+    $("scan-last").textContent = s.state === "completed"
+      ? `Last scan: ${Number(s.files_seen).toLocaleString()} files checked, ${s.findings ? `${s.findings} threat(s) found` : "no threats found"}.`
+      : `Last scan ${s.state}.`;
+  }
+}
+
+function onNotice(v) {
+  switch (v.type) {
+    case "status": sensor.status = v; renderStatus(); break;
+    case "scan": renderScan(v); break;
+    case "scan_started": renderScan({ state: "running", files_seen: 0, findings: 0, scan_id: v.scan_id }); break;
+    case "finding": threats.set(v.alert_id, v); renderThreats(); break;
+    case "findings": threats.clear(); for (const f of v.findings) threats.set(f.alert_id, f); renderThreats(); break;
+    case "action": {
+      const t = threats.get(v.alert_id);
+      if (v.ok) { threats.delete(v.alert_id); renderThreats(); toast(v.message); }
+      else if (t?.resultEl) t.resultEl.textContent = `Could not complete: ${v.message}`;
+      break;
+    }
+    case "frozen": case "blocked":
+      toast(v.type === "frozen" ? `${fileName(v.image)} was paused in ${v.elapsed_us} µs (${v.reason}).` : `${fileName(v.image)} was blocked.`, true);
+      break;
+    case "error": $("scan-last").textContent = v.error === "SCAN_ALREADY_RUNNING" ? "A scan is already running." : `Sensor: ${v.error}`; break;
+  }
+}
+
+function toast(text, danger) {
+  const n = el("div", "notice", text);
+  if (!danger) n.style.borderColor = "rgba(169,206,32,.4)", n.style.background = "rgba(169,206,32,.08)";
+  $("notices").prepend(n);
+  setTimeout(() => n.remove(), 15000);
+}
+
+if (tauri?.event) {
+  tauri.event.listen("sensor-notice", ({ payload }) => onNotice(payload));
+  tauri.event.listen("sensor-link", ({ payload }) => { sensor.linked = payload; renderStatus(); });
+}
+
+document.querySelectorAll("button[data-scope]").forEach((b) => b.addEventListener("click", async () => {
+  if (tauri?.core) {
+    try { await sensorRequest({ cmd: "scan", scope: b.dataset.scope }); }
+    catch (e) { $("scan-last").textContent = String(e); }
+  } else {
+    cloudScan(b.dataset.scope);
+  }
+}));
+$("scan-cancel").addEventListener("click", () => {
+  if (localScan?.scan_id) sensorRequest({ cmd: "cancel_scan", scan_id: localScan.scan_id }).catch(() => {});
+});
+
+// ------------------------------------------------------------- cloud (optional)
+const cfg = () => ({ api: store.get("scanu.api", ""), token: store.get("scanu.token", "") });
 async function call(path, init = {}, conn = cfg()) {
-  const { api, token } = conn;
-  const r = await fetch(api + path, { ...init, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
+  if (!conn.api) throw new Error("not linked");
+  const r = await fetch(conn.api + path, { ...init, headers: { Authorization: `Bearer ${conn.token}`, "Content-Type": "application/json" } });
   if (!r.ok) throw new Error(`${r.status}`);
   return r.json();
 }
 
-const prompts = document.getElementById("prompts");
-const empty = document.getElementById("empty");
-const status = document.getElementById("status");
-const tpl = document.getElementById("prompt-tpl");
 const rendered = new Map();
-
-function render(action) {
-  const node = tpl.content.firstElementChild.cloneNode(true);
+function renderPrompt(action) {
+  const node = $("prompt-tpl").content.firstElementChild.cloneNode(true);
   node.querySelector(".sev").textContent = action.severity;
   node.querySelector(".sev").classList.add(action.severity);
   node.querySelector(".title").textContent = action.title;
@@ -31,13 +147,10 @@ function render(action) {
       node.querySelectorAll("button").forEach((x) => (x.disabled = true));
       const out = node.querySelector(".result");
       try {
-        const r = await call(`/v1/actions/${action.action_id}/decision`, {
-          method: "POST",
-          body: JSON.stringify({ choice: b.dataset.choice, channel: "desktop" }),
-        });
+        const r = await call(`/v1/actions/${action.action_id}/decision`, { method: "POST", body: JSON.stringify({ choice: b.dataset.choice, channel: "desktop" }) });
         out.textContent = `Done: ${r.commands.length} signed command(s) sent to this device.`;
       } catch (e) {
-        out.textContent = `Could not reach Scanu cloud (${e.message}). Your device stays protected; try again.`;
+        out.textContent = `Could not reach Scanu cloud (${e.message}). This PC stays protected; try again.`;
         node.querySelectorAll("button").forEach((x) => (x.disabled = false));
       }
     });
@@ -45,130 +158,58 @@ function render(action) {
   return node;
 }
 
-async function refresh() {
+async function refreshCloud() {
+  if (!cfg().api) { $("cloud-section").hidden = true; return; }
+  $("cloud-section").hidden = false;
   try {
     const list = await call("/v1/actions?state=PROPOSED");
-    status.className = "pill ok";
-    status.lastChild.textContent = "Protected";
     const ids = new Set(list.map((a) => a.action_id));
-    for (const [id, el] of rendered) if (!ids.has(id) && !el.querySelector("button:disabled")) { el.remove(); rendered.delete(id); }
-    for (const a of list) if (!rendered.has(a.action_id)) { const el = render(a); prompts.prepend(el); rendered.set(a.action_id, el); }
-    empty.hidden = rendered.size > 0;
-  } catch {
-    status.className = "pill high";
-    status.lastChild.textContent = "Offline · local protection on";
-  }
+    for (const [id, n] of rendered) if (!ids.has(id) && !n.querySelector("button:disabled")) { n.remove(); rendered.delete(id); }
+    for (const a of list) if (!rendered.has(a.action_id)) { const n = renderPrompt(a); $("prompts").prepend(n); rendered.set(a.action_id, n); }
+    $("empty").hidden = rendered.size > 0;
+  } catch { $("empty").hidden = false; $("empty").textContent = "Scanu cloud unreachable. Local protection is unaffected."; }
 }
 
-// Instant notices from the sensor (Windows named pipe → Rust → this event).
-if (window.__TAURI__?.event) {
-  window.__TAURI__.event.listen("sensor-notice", ({ payload }) => {
-    if (payload.type === "scan") { refreshScan(); return; }
-    if (payload.type !== "frozen" && payload.type !== "blocked") return;
-    const n = document.createElement("div");
-    n.className = "notice";
-    const name = String(payload.image || "a program").split("\\").pop();
-    n.textContent = payload.type === "frozen"
-      ? `${name} was paused in ${payload.elapsed_us} µs (${payload.reason}). Decide below once the analysis arrives.`
-      : `${name} was blocked before it started.`;
-    document.getElementById("notices").prepend(n);
-    refresh();
-  });
+// Browser preview only: scan through the cloud API.
+async function cloudScan(scope) {
+  const dev = $("device").value;
+  try { await call(`/v1/devices/${encodeURIComponent(dev)}/scans`, { method: "POST", body: JSON.stringify({ scope }) }); $("scan-last").textContent = "Scan requested."; }
+  catch (e) { $("scan-last").textContent = `Could not start the scan (${e.message}).`; }
 }
-
-// ------------------------------------------------------------- scans
-const deviceSel = document.getElementById("device");
-const scanStatus = document.getElementById("scan-status");
-const scanLast = document.getElementById("scan-last");
-let activeScan = null;
-
 async function loadDevices() {
+  if (tauri?.core || !cfg().api) return;
   try {
     const list = await call("/v1/devices");
-    const keep = deviceSel.value || store.get("scanu.device", "");
-    deviceSel.replaceChildren(...list.map((d) => {
-      const o = document.createElement("option");
-      o.value = d.device_id;
-      o.textContent = `${d.online ? "●" : "○"} ${d.device_id}`;
-      return o;
-    }));
-    if (list.some((d) => d.device_id === keep)) deviceSel.value = keep;
-  } catch { /* offline: keep previous list */ }
-}
-deviceSel.addEventListener("change", () => { store.set("scanu.device", deviceSel.value); refreshScan(); });
-
-async function refreshScan() {
-  if (!deviceSel.value) return;
-  try {
-    const scans = await call(`/v1/scans?device_id=${encodeURIComponent(deviceSel.value)}&limit=3`);
-    activeScan = scans.find((s) => s.state === "queued" || s.state === "running") || null;
-    const last = scans.find((s) => s !== activeScan);
-    document.querySelectorAll("button[data-scope]").forEach((b) => (b.disabled = !!activeScan));
-    scanStatus.hidden = !activeScan;
-    if (activeScan) {
-      document.getElementById("scan-label").textContent = `${activeScan.scope} scan · ${activeScan.state}`;
-      const stats = document.getElementById("scan-stats");
-      stats.replaceChildren(...[["Files", activeScan.files_seen], ["Analyzed", activeScan.files_analyzed], ["Threats", activeScan.findings]].map(([k, v]) => {
-        const d = document.createElement("div");
-        const b = document.createElement("b");
-        b.textContent = Number(v).toLocaleString();
-        if (k === "Threats" && v > 0) b.className = "crit";
-        d.append(b, k);
-        return d;
-      }));
-    }
-    scanLast.textContent = last
-      ? `Last ${last.scope} scan: ${last.state}, ${last.files_seen.toLocaleString()} files, ${last.findings} threat(s).`
-      : "";
-  } catch { /* offline */ }
+    $("device").hidden = false;
+    $("device").replaceChildren(...list.map((d) => { const o = el("option", "", `${d.online ? "●" : "○"} ${d.device_id}`); o.value = d.device_id; return o; }));
+  } catch {}
 }
 
-document.querySelectorAll("button[data-scope]").forEach((b) => b.addEventListener("click", async () => {
-  b.disabled = true;
-  try {
-    await call(`/v1/devices/${encodeURIComponent(deviceSel.value)}/scans`, { method: "POST", body: JSON.stringify({ scope: b.dataset.scope }) });
-  } catch (e) {
-    scanLast.textContent = e.message === "409" ? "A scan is already running." : `Could not start the scan (${e.message}).`;
-  }
-  refreshScan();
-}));
-document.getElementById("scan-cancel").addEventListener("click", async () => {
-  if (activeScan) await call(`/v1/scans/${activeScan.scan_id}/cancel`, { method: "POST" }).catch(() => {});
-  refreshScan();
-});
-
-// ----------------------------------------------------------- settings
-const apiIn = document.getElementById("api");
-const tokIn = document.getElementById("token");
-const connMsg = document.getElementById("conn-msg");
-const who = document.getElementById("who");
-apiIn.value = cfg().api;
-tokIn.value = cfg().token;
-
+$("api").value = cfg().api;
+$("token").value = cfg().token;
 async function loadWho(conn = cfg()) {
   const me = await call("/v1/me", {}, conn);
-  who.textContent = `Signed in as ${me.display_name} (${me.role}) · ${me.tenant_name}`;
-  return me;
+  $("who").textContent = `Signed in as ${me.display_name} (${me.role}) · ${me.tenant_name}`;
 }
-
-document.getElementById("save").addEventListener("click", async () => {
-  const conn = { api: apiIn.value.trim().replace(/\/+$/, ""), token: tokIn.value };
-  if (!/^https?:\/\//.test(conn.api)) { connMsg.textContent = "Enter a full http(s):// URL."; return; }
+$("save").addEventListener("click", async () => {
+  const conn = { api: $("api").value.trim().replace(/\/+$/, ""), token: $("token").value };
+  if (!/^https?:\/\//.test(conn.api)) { $("conn-msg").textContent = "Enter a full http(s):// URL."; return; }
   try {
     await loadWho(conn);
-    store.set("scanu.api", conn.api);
-    store.set("scanu.token", conn.token);
-    connMsg.textContent = "Connected.";
-    loadDevices().then(refreshScan);
-    refresh();
-  } catch (e) {
-    connMsg.textContent = e.message === "401" ? "Token rejected." : "Can't reach the API.";
-  }
+    store.set("scanu.api", conn.api); store.set("scanu.token", conn.token);
+    $("conn-msg").textContent = "Linked.";
+    refreshCloud(); loadDevices();
+  } catch (e) { $("conn-msg").textContent = e.message === "401" ? "Token rejected." : "Can't reach that API."; }
+});
+$("unlink").addEventListener("click", () => {
+  store.del("scanu.api"); store.del("scanu.token");
+  $("api").value = ""; $("token").value = ""; $("conn-msg").textContent = "Unlinked.";
+  $("who").textContent = "Not linked."; refreshCloud();
 });
 
-loadWho().catch(() => {});
-loadDevices().then(refreshScan);
-refresh();
-setInterval(refresh, 4000);
-setInterval(refreshScan, 1500);
-setInterval(loadDevices, 10000);
+renderStatus();
+if (cfg().api) loadWho().catch(() => {});
+loadDevices();
+refreshCloud();
+setInterval(refreshCloud, 5000);
+setInterval(() => { if (sensor.linked) sensorRequest({ cmd: "status" }).catch(() => {}); }, 15000);

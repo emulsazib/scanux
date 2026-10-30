@@ -123,6 +123,7 @@ async fn main() -> anyhow::Result<()> {
                     use engine::engine::pb_scan_state_name as name;
                     println!("🔎 SCAN {scan_id} {}  files={files_seen} findings={findings}", name(state));
                 }
+                LocalNotice::Finding { path, summary, .. } => println!("🛑 FINDING  {summary}  {path}"),
                 LocalNotice::CommandExecuted { command_id, ok, reason } => {
                     println!("{} COMMAND {command_id} {}", if ok { "✅" } else { "❌" }, if ok { "executed".into() } else { reason });
                 }

@@ -53,17 +53,21 @@ Without OpenAI credentials, the agents use deterministic correlation, so every t
 
 ## Windows
 
+**Install:** download `Scanu_<version>_x64-setup.exe` from [GitHub Releases](https://github.com/emulsazib/scanux/releases). It installs the tray app and the `ScanuSensor` service (LocalSystem, auto-start), and works standalone with no account. Release notes: [docs/releases](docs/releases).
+
+**Link a device to your Scanu cloud** (optional):
+
+```bash
+make device DEVICE=laptop-42                                   # on the operator machine
+cargo run -p devpki -- bundle --device laptop-42 --gateway https://gateway.example:7443 > enroll.json
+```
 ```powershell
-cargo build --release -p sensor-svc           # scanu-sensor.exe
-# driver: see sensor/driver-win/README.md (WDK, test-signing)
-# config: C:\ProgramData\Scanu\sensor.json
-#   { "device_id": "...", "gateway": "https://gateway:7443", "canary_dirs": ["C:\\Users\\<you>\\Documents"] }
-# PKI:    C:\ProgramData\Scanu\pki\{ca.pem, device.pem, device.key, cmd-signing.pub.pem, cmd-signing.key_id}
-sc.exe create ScanuSensor binPath= "C:\Program Files\Scanu\scanu-sensor.exe" start= auto obj= LocalSystem
-sc.exe sdset ScanuSensor "D:(A;;CCLCSWRPLORC;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)"   # admins can't stop it
+& "C:\Program Files\Scanu\scanu-sensor.exe" enroll .\enroll.json   # on the PC, elevated
 ```
 
-`make check-windows` type-checks the Windows backend from macOS. `sensor-svc` itself links `ring` (C), so build it on Windows.
+**Build the installer:** push a tag `vX.Y.Z` (matching `desktop/src-tauri/tauri.conf.json`). `.github/workflows/release-windows.yml` then tests the endpoint crates on Windows, builds `scanu-sensor.exe`, bundles it as a Tauri sidecar into an NSIS installer ([hooks](desktop/src-tauri/windows/hooks.nsh) register the service), and publishes the release. Pushing a `release/**` branch does a build-only dry run.
+
+**Kernel driver:** not in the installer yet (it needs Microsoft attestation signing). See [sensor/driver-win/README.md](sensor/driver-win/README.md) for test-signed builds. `make check-windows` type-checks the Windows backend from macOS.
 
 ## Layout
 

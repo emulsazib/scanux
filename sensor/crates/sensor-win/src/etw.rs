@@ -2,7 +2,8 @@
 //! DNS, file, and PowerShell script blocks.
 
 use crate::filetime_to_unix_ms;
-use ferrisetw::parser::Parser;
+use crate::paths::PathMap;
+use ferrisetw::parser::{Parser, Pointer};
 use ferrisetw::provider::Provider;
 use ferrisetw::schema_locator::SchemaLocator;
 use ferrisetw::trace::UserTrace;
@@ -10,10 +11,10 @@ use ferrisetw::EventRecord;
 use sensor_core::event::Direction;
 use sensor_core::platform::{EventSource, PlatformError, PlatformResult};
 use sensor_core::{FileOp, ProcessKey, RawEvent};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 const KERNEL_PROCESS: &str = "22fb2cd6-0e7b-422b-a0c7-2fad1fd0e716";
 const KERNEL_NETWORK: &str = "7dd42a49-5329-4832-8dfd-43d979153a88";
@@ -25,14 +26,25 @@ const POWERSHELL: &str = "a0c1853b-5c40-4b15-8766-3cf1c58f985a";
 /// events can be keyed reuse-safely.
 type ProcTable = Arc<Mutex<HashMap<u32, (u64, String)>>>;
 
+/// Lower-cased DOS paths of the deployed canaries. Writes are tracked only for
+/// these (full write telemetry would cost far more than it's worth).
+pub type CanaryPaths = Arc<RwLock<HashSet<String>>>;
+
 pub struct EtwSource {
     procs: ProcTable,
+    canaries: CanaryPaths,
     trace: Option<UserTrace>,
 }
 
 impl Default for EtwSource {
     fn default() -> Self {
-        Self { procs: Arc::new(Mutex::new(HashMap::new())), trace: None }
+        Self { procs: Arc::new(Mutex::new(HashMap::new())), canaries: Arc::default(), trace: None }
+    }
+}
+
+impl EtwSource {
+    pub fn with_canaries(canaries: CanaryPaths) -> Self {
+        Self { canaries, ..Self::default() }
     }
 }
 
@@ -52,7 +64,9 @@ impl EventSource for EtwSource {
     }
 
     fn start(&mut self, tx: Sender<RawEvent>) -> PlatformResult<()> {
-        let (p1, t1) = (self.procs.clone(), tx.clone());
+        // Kernel providers report NT device paths; the engine needs drive-letter paths.
+        let paths = Arc::new(PathMap::load());
+        let (p1, t1, m1) = (self.procs.clone(), tx.clone(), paths.clone());
         let process = Provider::by_guid(KERNEL_PROCESS)
             .any(0x10) // WINEVENT_KEYWORD_PROCESS
             .add_callback(move |r: &EventRecord, sl: &SchemaLocator| {
@@ -62,7 +76,7 @@ impl EventSource for EtwSource {
                     1 => {
                         let pid: u32 = p.try_parse("ProcessID").unwrap_or(0);
                         let ppid: u32 = p.try_parse("ParentProcessID").unwrap_or(0);
-                        let image: String = p.try_parse("ImageName").unwrap_or_default();
+                        let image = m1.to_dos(&p.try_parse::<String>("ImageName").unwrap_or_default());
                         let ft: u64 = p.try_parse::<u64>("CreateTime").unwrap_or(0);
                         let start = filetime_to_unix_ms(ft);
                         let parent = key(&p1, ppid).0;
@@ -135,21 +149,45 @@ impl EventSource for EtwSource {
             })
             .build();
 
-        let (p4, t4) = (self.procs.clone(), tx.clone());
+        let (p4, t4, m4, canaries) = (self.procs.clone(), tx.clone(), paths.clone(), self.canaries.clone());
+        // FileObject → canary path, learned from opens of canary files only.
+        let open_canaries: Arc<Mutex<HashMap<usize, String>>> = Arc::default();
         let file = Provider::by_guid(KERNEL_FILE)
-            .any(0x10 | 0x20 | 0x400 | 0x800 | 0x1000) // FILENAME | FILEIO | CREATE | DELETE_PATH | RENAME_PATH
+            .any(0x80 | 0x200 | 0x400 | 0x800 | 0x1000) // CREATE | WRITE | DELETE_PATH | RENAME_PATH | CREATE_NEW_FILE
             .add_callback(move |r: &EventRecord, sl: &SchemaLocator| {
-                // 12 Create, 16 Write (via FileObject→name cache in M2), 26 DeletePath, 27 RenamePath
-                let op = match r.event_id() {
-                    12 => FileOp::Create,
-                    26 => FileOp::Delete,
-                    27 => FileOp::Rename,
-                    _ => return,
-                };
+                // 12 Create(open) · 16 Write · 26 DeletePath · 27 RenamePath · 30 CreateNewFile
+                let id = r.event_id();
+                if !matches!(id, 12 | 16 | 26 | 27 | 30) {
+                    return;
+                }
                 let Ok(schema) = sl.event_schema(r) else { return };
                 let p = Parser::create(r, &schema);
+                let file_object = p.try_parse::<Pointer>("FileObject").map(|x| *x).unwrap_or(0);
+                let (path, op) = match id {
+                    // Opens are not telemetry (far too many); remember canary handles for writes.
+                    12 => {
+                        let path = m4.to_dos(&p.try_parse::<String>("FileName").unwrap_or_default());
+                        if file_object != 0 && canaries.read().unwrap().contains(&path.to_lowercase()) {
+                            let mut m = open_canaries.lock().unwrap();
+                            if m.len() > 4_096 {
+                                m.clear();
+                            }
+                            m.insert(file_object, path);
+                        }
+                        return;
+                    }
+                    16 => match open_canaries.lock().unwrap().get(&file_object) {
+                        Some(path) => (path.clone(), FileOp::Write),
+                        None => return,
+                    },
+                    26 => (m4.to_dos(&p.try_parse::<String>("FilePath").unwrap_or_default()), FileOp::Delete),
+                    27 => (m4.to_dos(&p.try_parse::<String>("FilePath").unwrap_or_default()), FileOp::Rename),
+                    _ => (m4.to_dos(&p.try_parse::<String>("FileName").unwrap_or_default()), FileOp::Create),
+                };
+                if path.is_empty() {
+                    return;
+                }
                 let (k, image) = key(&p4, r.process_id());
-                let path: String = p.try_parse("FileName").or_else(|_| p.try_parse("FilePath")).unwrap_or_default();
                 let _ = t4.send(RawEvent::File { process: k, image_path: image, path, op, new_path: None });
             })
             .build();

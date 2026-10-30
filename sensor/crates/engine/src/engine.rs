@@ -52,6 +52,18 @@ pub enum LocalNotice {
     Alert { alert_id: String, severity: Severity, summary: String },
     CommandExecuted { command_id: String, ok: bool, reason: String },
     Scan { scan_id: String, state: pb::ScanState, files_seen: u64, findings: u64 },
+    /// A threat the local user may act on (see `Engine::local_action`).
+    Finding { alert_id: String, path: String, severity: Severity, summary: String, can_terminate: bool, can_quarantine: bool },
+}
+
+/// What Scanu itself flagged, and the only things local (unsigned) requests may act on.
+#[derive(Debug, Clone)]
+pub struct LocalTarget {
+    pub path: Option<String>,
+    pub sha256: String,
+    pub process: Option<ProcessKey>,
+    pub summary: String,
+    pub severity: Severity,
 }
 
 pub fn pb_scan_state_name(s: pb::ScanState) -> &'static str {
@@ -116,6 +128,7 @@ pub struct Engine {
     pending_scans: Vec<ScanJob>,
     running_scans: HashMap<String, Arc<AtomicBool>>,
     pub outbox_scans: VecDeque<pb::ScanProgress>,
+    local_targets: HashMap<String, LocalTarget>,
 }
 
 fn ts(ms: u64) -> prost_types::Timestamp {
@@ -179,6 +192,7 @@ impl Engine {
             pending_scans: Vec::new(),
             running_scans: HashMap::new(),
             outbox_scans: VecDeque::new(),
+            local_targets: HashMap::new(),
         })
     }
 
@@ -439,7 +453,9 @@ impl Engine {
         let mut o = outcome;
         o.elapsed_us = frozen_us;
         let state = o.state;
-        self.raise(Some(p), Severity::Critical, 0.99, reason, state, Some(pseudo), "", Some(o))
+        let id = self.raise(Some(p), Severity::Critical, 0.99, reason, state, Some(pseudo), "", Some(o));
+        self.remember(&id, LocalTarget { path: Some(image), sha256: String::new(), process: Some(p), summary: "ransomware_canary".into(), severity: Severity::Critical });
+        id
     }
 
     /// Pre-execution gate: scores an image before its first thread runs.
@@ -603,6 +619,31 @@ impl Engine {
         !self.running_scans.is_empty()
     }
 
+    /// Local cancel (desktop pipe). Returns false if no such scan is running.
+    pub fn cancel_scan(&mut self, scan_id: &str) -> bool {
+        match self.running_scans.get(scan_id) {
+            Some(flag) => {
+                flag.store(true, Ordering::Relaxed);
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// Without the kernel driver there is no pre-exec gate: a process that
+    /// scored "block" is already running, so Tier-1 freezes it instead.
+    pub fn on_exec_verdict(&mut self, p: ProcessKey, image_path: &str) -> ExecDecision {
+        let (decision, _) = self.pre_exec(p, image_path);
+        if decision == ExecDecision::Block {
+            let outcome = self.tier1.freeze(self.procs.as_ref(), self.net.as_ref(), p, image_path);
+            tracing::warn!(pid = p.pid, state = ?outcome.state, "post-exec verdict: frozen (no driver pre-exec gate)");
+            if let Some(a) = self.outbox_alerts.back_mut() {
+                a.tier1 = outcome.state as i32;
+            }
+        }
+        decision
+    }
+
     /// Progress from the scan thread. Terminal states release the scan slot.
     pub fn scan_progress(&mut self, mut p: pb::ScanProgress) {
         p.current_path = self.normalizer.pseudo.path(&p.current_path);
@@ -635,10 +676,65 @@ impl Engine {
             (r, if v.decision == Decision::Malicious { Severity::Critical } else { Severity::High })
         };
         let conf = if v.bloom_hit { 0.99 } else { v.score.unwrap_or(0.8) };
-        self.raise(None, severity, conf, reason, FreezeState::None, Some(pseudo), &v.sha256, None);
+        let id = self.raise(None, severity, conf, reason, FreezeState::None, Some(pseudo), &v.sha256, None);
         if let Some(a) = self.outbox_alerts.back_mut() {
             a.scan_id = scan_id.to_string();
         }
+        let summary = if v.bloom_hit { "known_malware" } else { "suspicious_executable" };
+        self.remember(&id, LocalTarget { path: Some(path.to_string()), sha256: v.sha256.clone(), process: None, summary: summary.into(), severity });
+    }
+
+    fn remember(&mut self, alert_id: &str, t: LocalTarget) {
+        if self.local_targets.len() > 1_000 {
+            self.local_targets.clear();
+        }
+        self.notify(LocalNotice::Finding {
+            alert_id: alert_id.to_string(),
+            path: t.path.clone().unwrap_or_default(),
+            severity: t.severity,
+            summary: t.summary.clone(),
+            can_terminate: t.process.is_some(),
+            can_quarantine: !t.sha256.is_empty(),
+        });
+        self.local_targets.insert(alert_id.to_string(), t);
+    }
+
+    /// Outstanding threats the local user can act on.
+    pub fn local_findings(&self) -> Vec<(String, LocalTarget)> {
+        self.local_targets.iter().map(|(k, v)| (k.clone(), v.clone())).collect()
+    }
+
+    /// Local, unsigned actions from the logged-in user (desktop pipe). Deliberately
+    /// narrow: only on targets Scanu itself flagged, and only actions that can't
+    /// help an attacker. Quarantine is reversible from the vault (restore stays
+    /// cloud-only), and terminate applies only to processes Scanu froze. Resume and
+    /// allowlist are never local: malware running as the user could use them.
+    pub fn local_action(&mut self, alert_id: &str, action: &str) -> Result<String, String> {
+        let t = self.local_targets.get(alert_id).cloned().ok_or("UNKNOWN_FINDING")?;
+        let result = match action {
+            "quarantine" if !t.sha256.is_empty() => {
+                let path = t.path.as_deref().ok_or("NO_PATH")?;
+                self.executor
+                    .vault
+                    .quarantine(&(self.resolve)(path), Some(&t.sha256), None)
+                    .map(|e| format!("quarantined as {}", e.vault_id))
+                    .map_err(|e| format!("QUARANTINE_FAILED: {e}"))
+            }
+            "terminate" => {
+                let p = t.process.ok_or("NOT_A_PROCESS")?;
+                self.procs
+                    .check_identity(p)
+                    .and_then(|_| self.procs.terminate(p))
+                    .map(|_| format!("terminated pid {}", p.pid))
+                    .map_err(|e| format!("TERMINATE_FAILED: {e}"))
+            }
+            _ => Err("UNSUPPORTED_ACTION".to_string()),
+        }?;
+        tracing::warn!(%alert_id, %action, %result, "local user action");
+        if action == "quarantine" || t.sha256.is_empty() {
+            self.local_targets.remove(alert_id);
+        }
+        Ok(result)
     }
 
     // ------------------------------------------------------------- uplink

@@ -10,3 +10,6 @@ desktop/src-tauri/target/
 edge-ml/models/*.onnx
 edge-ml/models/*.bloom
 *.DS_Store
+desktop/src-tauri/binaries/
+desktop/tauri.log
+dist/
