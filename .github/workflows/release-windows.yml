@@ -1,0 +1,109 @@
+name: Release · Windows
+
+on:
+  push:
+    tags: ["v*"]          # builds and publishes a GitHub Release
+    branches: ["release/**"]  # build-only dry runs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows x64 installer
+    runs-on: windows-latest
+    timeout-minutes: 75
+    env:
+      CARGO_TERM_COLOR: never
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            desktop/src-tauri -> target
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $conf = (Get-Content desktop/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          if ($conf -ne $tag) { Write-Output "::error::tag v$tag does not match tauri.conf.json version $conf"; exit 1 }
+
+      - name: Test endpoint crates on Windows
+        shell: pwsh
+        run: ./.github/scripts/cargo.ps1 test --locked -p sensor-core -p vault -p enforcer -p edge-ml -p engine -p sensor-win
+
+      - name: Build scanu-sensor.exe
+        shell: pwsh
+        run: ./.github/scripts/cargo.ps1 build --release --locked -p sensor-svc
+
+      - name: Smoke-test scanu-sensor.exe
+        shell: pwsh
+        run: |
+          $v = & target/release/scanu-sensor.exe --version
+          Write-Output $v
+          if ($v -notmatch '^scanu-sensor \d+\.\d+\.\d+') { Write-Output "::error::unexpected --version output: $v"; exit 1 }
+
+      - name: Stage sensor as Tauri sidecar
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force desktop/src-tauri/binaries | Out-Null
+          Copy-Item target/release/scanu-sensor.exe desktop/src-tauri/binaries/scanu-sensor-x86_64-pc-windows-msvc.exe
+
+      - name: Build installer (Tauri · NSIS)
+        working-directory: desktop
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          npx --yes @tauri-apps/cli@2.12.4 build --bundles nsis 2>&1 | Tee-Object -FilePath tauri.log
+          if ($LASTEXITCODE -ne 0) {
+            $tail = (Get-Content tauri.log | Select-Object -Last 60 | ForEach-Object { $_ -replace '%', '%25' }) -join '%0A'
+            Write-Output "::error title=tauri build failed::$tail"
+            exit 1
+          }
+
+      - name: Collect release files
+        id: files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $setup = Get-ChildItem desktop/src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          if (-not $setup) { Write-Output "::error::installer not found"; exit 1 }
+          Copy-Item $setup.FullName dist/
+          Get-ChildItem dist/*.exe | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
+          } | Set-Content -Encoding ascii dist/SHA256SUMS.txt
+          Get-Content dist/SHA256SUMS.txt
+          Write-Output "::notice title=installer::$($setup.Name) $([math]::Round($setup.Length / 1MB, 1)) MB"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scanu-windows-x64
+          path: dist/
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Scanu ${{ github.ref_name }} for Windows
+          body_path: docs/releases/${{ github.ref_name }}.md
+          prerelease: true
+          files: |
+            dist/*.exe
+            dist/SHA256SUMS.txt

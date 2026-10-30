@@ -278,3 +278,63 @@ fn signed_start_scan_runs_and_can_be_cancelled() {
         "{done:?}"
     );
 }
+
+#[test]
+fn without_driver_known_bad_process_is_frozen_after_start() {
+    let bad = edge_ml::testpe::tiny_pe64(edge_ml::testpe::Shape::PackedRwx);
+    let mut b = edge_ml::Bloom::with_capacity(10, 0.001);
+    b.insert(&sha2_digest(&bad));
+    let mut r = rig(Some(b));
+    let img = r"C:\Users\alice\Downloads\dropper.exe";
+    write_real(&r, img, &bad);
+    r.plat.spawn(key(77));
+    assert_eq!(r.engine.on_exec_verdict(key(77), img), ExecDecision::Block);
+    assert_eq!(r.plat.state(key(77)), Some(ProcState::Suspended));
+    assert!(r.plat.is_blocked(img));
+    let a = r.engine.outbox_alerts.back().unwrap();
+    assert_eq!(a.tier1, FreezeState::SuspendedAndNetBlocked as i32);
+}
+
+#[test]
+fn local_user_can_only_act_on_what_scanu_flagged() {
+    let mut b = edge_ml::Bloom::with_capacity(10, 0.001);
+    let bad = [edge_ml::testpe::tiny_pe64(edge_ml::testpe::Shape::Benign), b"KNOWN-BAD".to_vec()].concat();
+    b.insert(&sha2_digest(&bad));
+    let r = rig(Some(b));
+    let path = r"C:\Users\alice\Downloads\updater.exe";
+    write_real(&r, path, &bad);
+    write_real(&r, r"C:\Users\alice\Documents\thesis.docx", b"precious user data, not malware at all");
+    let root = r.root.clone();
+    let mut e = r.engine;
+    let v = e.edge.analyze_file(&root.join("C/Users/alice/Downloads/updater.exe")).unwrap();
+    e.scan_finding("scn_x", path, &v);
+    let (id, t) = e.local_findings().pop().unwrap();
+    assert_eq!(t.path.as_deref(), Some(path));
+    // Arbitrary ids / actions are refused.
+    assert_eq!(e.local_action("alr_not_ours", "quarantine"), Err("UNKNOWN_FINDING".into()));
+    assert_eq!(e.local_action(&id, "terminate"), Err("NOT_A_PROCESS".into()));
+    assert_eq!(e.local_action(&id, "allowlist"), Err("UNSUPPORTED_ACTION".into()));
+    assert!(e.local_action(&id, "quarantine").unwrap().starts_with("quarantined as vlt_"));
+    assert!(!root.join("C/Users/alice/Downloads/updater.exe").exists());
+    assert!(root.join("C/Users/alice/Documents/thesis.docx").exists());
+    assert!(e.local_findings().is_empty());
+}
+
+#[test]
+fn local_user_can_terminate_only_a_process_scanu_froze() {
+    let mut r = rig(None);
+    let specs = r.engine.deploy_canaries(&[r"C:\Users\alice\Documents"]).unwrap();
+    let img = r"C:\Users\alice\Downloads\locker.exe";
+    start(&mut r, 55, img);
+    start(&mut r, 56, r"C:\Windows\explorer.exe");
+    let canary = specs[0].path.to_string_lossy().to_string();
+    r.engine
+        .ingest(RawEvent::File { process: key(55), image_path: img.into(), path: canary, op: FileOp::Write, new_path: None }, 2)
+        .unwrap();
+    let (id, t) = r.engine.local_findings().pop().unwrap();
+    assert_eq!(t.process, Some(key(55)));
+    assert!(r.engine.local_action(&id, "resume").is_err(), "resume is never local");
+    r.engine.local_action(&id, "terminate").unwrap();
+    assert_eq!(r.plat.state(key(55)), Some(ProcState::Terminated));
+    assert_eq!(r.plat.state(key(56)), Some(ProcState::Running));
+}

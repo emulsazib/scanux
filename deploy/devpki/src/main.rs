@@ -3,6 +3,8 @@
 //!
 //!   devpki init   --out deploy/pki/out
 //!   devpki device --out deploy/pki/out --tenant <uuid> --device <id>
+//!   devpki bundle --out deploy/pki/out --device <id> --gateway https://host:7443 > enroll.json
+//!       (then on the PC, elevated: scanu-sensor.exe enroll enroll.json)
 
 use clap::{Parser, Subcommand};
 use ed25519_dalek::pkcs8::spki::der::pem::LineEnding;
@@ -26,6 +28,16 @@ struct Cli {
 enum Cmd {
     /// CA, gateway server cert, command-signing key.
     Init,
+    /// Enrollment bundle (JSON on stdout) for `scanu-sensor.exe enroll`. Contains the device private key.
+    Bundle {
+        #[arg(long)]
+        device: String,
+        #[arg(long)]
+        gateway: String,
+        /// TLS name in the gateway cert, if it differs from the URL host.
+        #[arg(long)]
+        tls_name: Option<String>,
+    },
     /// Device client cert bound to a tenant via a SPIFFE URI SAN.
     Device {
         #[arg(long)]
@@ -82,6 +94,21 @@ fn main() -> R<()> {
             write(&cli.out.join("cmd-signing.key.pem"), &v1.to_pkcs8_pem(LineEnding::LF)?)?;
             write(&cli.out.join("cmd-signing.pub.pem"), &vk.to_public_key_pem(LineEnding::LF)?)?;
             write(&cli.out.join("cmd-signing.key_id"), &key_id)?;
+        }
+        Cmd::Bundle { device, gateway, tls_name } => {
+            let read = |p: PathBuf| std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()));
+            let dev = cli.out.join("devices");
+            let bundle = serde_json::json!({
+                "device_id": device,
+                "gateway": gateway,
+                "gateway_tls_name": tls_name,
+                "ca_pem": read(cli.out.join("ca.pem"))?,
+                "device_cert_pem": read(dev.join(format!("{device}.pem")))?,
+                "device_key_pem": read(dev.join(format!("{device}.key")))?,
+                "cmd_signing_pub_pem": read(cli.out.join("cmd-signing.pub.pem"))?,
+                "cmd_signing_key_id": read(cli.out.join("cmd-signing.key_id"))?.trim(),
+            });
+            println!("{}", serde_json::to_string_pretty(&bundle)?);
         }
         Cmd::Device { tenant, device } => {
             if !tenant.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')

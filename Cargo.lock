@@ -956,6 +956,7 @@ dependencies = [
  "hex",
  "rand 0.8.8",
  "rcgen",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -3593,6 +3594,7 @@ dependencies = [
  "ed25519-dalek",
  "edge-ml",
  "engine",
+ "scanu-proto",
  "sensor-core",
  "sensor-win",
  "serde",

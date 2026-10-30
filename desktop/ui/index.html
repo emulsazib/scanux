@@ -11,21 +11,22 @@
 <body>
   <header class="top">
     <div class="brand">SCANU</div>
-    <span id="status" class="pill ok"><span class="pulse"></span>Protected</span>
+    <span id="status" class="pill"><span class="pulse"></span><span>Connecting…</span></span>
   </header>
 
   <main>
     <section id="notices" aria-live="polite"></section>
 
-    <section class="card scan">
+    <section class="card">
       <div class="row between">
         <h2>Scan this PC</h2>
-        <select id="device" aria-label="Device"></select>
+        <select id="device" aria-label="Device" hidden></select>
       </div>
       <div class="choices two">
         <button class="btn primary" data-scope="quick">Quick scan</button>
         <button class="btn" data-scope="full">Full system scan</button>
       </div>
+      <p class="muted hint">Quick checks Downloads, Desktop, Temp, AppData and Startup. Full checks every file on every drive in the background.</p>
       <div id="scan-status" class="scan-status" aria-live="polite" hidden>
         <div class="row between"><span id="scan-label" class="pill ok"></span><button id="scan-cancel" class="btn danger small">Cancel</button></div>
         <div class="bar"><span></span></div>
@@ -34,20 +35,30 @@
       <div id="scan-last" class="muted"></div>
     </section>
 
-    <h1>Decisions waiting</h1>
-    <p class="muted">Scanu pauses dangerous programs on its own. Anything that deletes or kills waits for you.</p>
-    <div id="prompts"></div>
-    <div id="empty" class="empty" hidden>Nothing needs your attention.</div>
+    <section id="threats-section" hidden>
+      <h1>Threats found</h1>
+      <p class="muted">Scanu has already contained these. Choose what to do. Quarantined files can be restored later.</p>
+      <div id="threats"></div>
+    </section>
+
+    <section id="cloud-section" hidden>
+      <h1>Decisions waiting</h1>
+      <p class="muted">From your Scanu cloud. Anything that deletes or kills waits for you.</p>
+      <div id="prompts"></div>
+      <div id="empty" class="empty" hidden>Nothing needs your attention.</div>
+    </section>
   </main>
 
   <footer>
     <details>
       <summary class="label">Settings</summary>
-      <div id="who" class="muted"></div>
-      <label>API URL <input id="api" spellcheck="false" inputmode="url" /></label>
+      <div id="sensor-info" class="muted"></div>
+      <h3>Scanu cloud (optional)</h3>
+      <div id="who" class="muted">Not linked. Scanu protects this PC on its own; link a cloud to manage several devices and get AI-assisted investigations.</div>
+      <label>API URL <input id="api" spellcheck="false" inputmode="url" placeholder="https://api.your-scanu-cloud.example" /></label>
       <label>Access token <input id="token" type="password" autocomplete="off" /></label>
-      <div class="row"><button id="save" class="btn primary">Save &amp; test</button><span id="conn-msg" class="muted"></span></div>
-      <p class="muted">Profile, email and notification preferences are edited in the web console under Settings.</p>
+      <div class="row"><button id="save" class="btn primary">Save &amp; test</button><button id="unlink" class="btn">Unlink</button><span id="conn-msg" class="muted"></span></div>
+      <p class="muted">Link this device's sensor with the enrollment file from your administrator: run <code>scanu-sensor.exe enroll enrollment.json</code> as administrator.</p>
     </details>
   </footer>
   <template id="prompt-tpl">

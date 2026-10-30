@@ -52,3 +52,10 @@ select { height: 32px; border-radius: 8px; border: 1px solid var(--stroke); back
 .stats b.crit { color: var(--critical); }
 #scan-last { margin-top: 10px; }
 #who { margin: 8px 0; }
+.hint { margin: 10px 0 0; }
+h3 { font: 500 14px "Space Grotesk", sans-serif; margin: 14px 0 4px; }
+code { font: 11.5px "JetBrains Mono", monospace; color: var(--ink); }
+.threat { display: grid; gap: 8px; }
+.threat .path { font: 11.5px "JetBrains Mono", monospace; color: var(--muted); word-break: break-all; }
+.threat .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill.warn { color: var(--warning); background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4); }

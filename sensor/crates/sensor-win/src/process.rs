@@ -5,9 +5,10 @@ use crate::filetime_to_unix_ms;
 use sensor_core::platform::{PlatformError, PlatformResult, ProcessControl};
 use sensor_core::ProcessKey;
 use windows::Win32::Foundation::{CloseHandle, FILETIME, HANDLE};
+use windows::core::PWSTR;
 use windows::Win32::System::Threading::{
-    GetProcessTimes, OpenProcess, TerminateProcess, PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION,
-    PROCESS_SUSPEND_RESUME, PROCESS_TERMINATE,
+    GetProcessTimes, OpenProcess, QueryFullProcessImageNameW, TerminateProcess, PROCESS_ACCESS_RIGHTS,
+    PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SUSPEND_RESUME, PROCESS_TERMINATE,
 };
 
 #[link(name = "ntdll")]
@@ -36,6 +37,20 @@ fn creation_ms(h: &Handle) -> Option<u64> {
     let (mut c, mut e, mut k, mut u) = (FILETIME::default(), FILETIME::default(), FILETIME::default(), FILETIME::default());
     unsafe { GetProcessTimes(h.0, &mut c, &mut e, &mut k, &mut u) }.ok()?;
     Some(filetime_to_unix_ms(((c.dwHighDateTime as u64) << 32) | c.dwLowDateTime as u64))
+}
+
+/// (start time in unix ms, Win32 image path) straight from the OS. These are the
+/// same values the PID-reuse guard checks, so keys built from them always match.
+pub fn process_info(pid: u32) -> Option<(u64, String)> {
+    let h = open(pid, PROCESS_QUERY_LIMITED_INFORMATION).ok()?;
+    let start = creation_ms(&h)?;
+    let mut buf = [0u16; 1024];
+    let mut len = buf.len() as u32;
+    let image = unsafe { QueryFullProcessImageNameW(h.0, PROCESS_NAME_WIN32, PWSTR(buf.as_mut_ptr()), &mut len) }
+        .ok()
+        .map(|_| String::from_utf16_lossy(&buf[..len as usize]))
+        .unwrap_or_default();
+    Some((start, image))
 }
 
 #[derive(Default)]
