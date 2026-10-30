@@ -52,9 +52,20 @@ fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
 }
 
+/// Reuse-safe key for `pid`. Processes that predate the sensor (or whose start
+/// event we missed) are looked up from the OS once and cached.
 fn key(procs: &ProcTable, pid: u32) -> (ProcessKey, String) {
-    let t = procs.lock().unwrap();
-    let (start, image) = t.get(&pid).cloned().unwrap_or((0, String::new()));
+    if let Some((start, image)) = procs.lock().unwrap().get(&pid).cloned() {
+        return (ProcessKey { pid, start_time_ms: start }, image);
+    }
+    let (start, image) = crate::process::process_info(pid).unwrap_or((0, String::new()));
+    if start != 0 {
+        let mut t = procs.lock().unwrap();
+        if t.len() > 50_000 {
+            t.clear();
+        }
+        t.insert(pid, (start, image.clone()));
+    }
     (ProcessKey { pid, start_time_ms: start }, image)
 }
 
@@ -76,9 +87,13 @@ impl EventSource for EtwSource {
                     1 => {
                         let pid: u32 = p.try_parse("ProcessID").unwrap_or(0);
                         let ppid: u32 = p.try_parse("ParentProcessID").unwrap_or(0);
-                        let image = m1.to_dos(&p.try_parse::<String>("ImageName").unwrap_or_default());
-                        let ft: u64 = p.try_parse::<u64>("CreateTime").unwrap_or(0);
-                        let start = filetime_to_unix_ms(ft);
+                        // Prefer the OS's own values: they are what the PID-reuse guard compares
+                        // against. ETW's CreateTime/ImageName are the fallback (process already gone).
+                        let (start, image) = crate::process::process_info(pid).unwrap_or_else(|| {
+                            let ft = p.try_parse::<u64>("CreateTime").unwrap_or(0);
+                            (filetime_to_unix_ms(ft), m1.to_dos(&p.try_parse::<String>("ImageName").unwrap_or_default()))
+                        });
+                        let image = if image.is_empty() { m1.to_dos(&p.try_parse::<String>("ImageName").unwrap_or_default()) } else { image };
                         let parent = key(&p1, ppid).0;
                         p1.lock().unwrap().insert(pid, (start, image.clone()));
                         let _ = t1.send(RawEvent::ProcessStart {
