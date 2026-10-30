@@ -1,0 +1,66 @@
+[workspace]
+resolver = "2"
+members = [
+    "schemas/rust",
+    "sensor/crates/sensor-core",
+    "sensor/crates/vault",
+    "sensor/crates/enforcer",
+    "sensor/crates/sensor-sim",
+    "sensor/crates/sensor-win",
+    "sensor/crates/sensor-linux",
+    "sensor/crates/sensor-macos",
+    "sensor/crates/sensor-svc",
+    "sensor/crates/engine",
+    "deploy/devpki",
+    "edge-ml/crates/edge-ml",
+    "ingest/gateway",
+    "ingest/writers",
+    "ingest/bus",
+]
+# Tauri pulls a large dependency tree; it is built on its own from desktop/.
+exclude = ["desktop/src-tauri"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "Proprietary"
+rust-version = "1.85"
+
+[workspace.dependencies]
+scanu-proto = { path = "schemas/rust" }
+sensor-core = { path = "sensor/crates/sensor-core" }
+vault = { path = "sensor/crates/vault" }
+enforcer = { path = "sensor/crates/enforcer" }
+edge-ml = { path = "edge-ml/crates/edge-ml" }
+engine = { path = "sensor/crates/engine" }
+ingest-bus = { path = "ingest/bus" }
+
+tonic = { version = "0.14", features = ["tls-ring"] }
+tonic-prost = "0.14"
+tonic-prost-build = "0.14"
+prost = "0.14"
+prost-types = "0.14"
+protox = "0.10"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "signal", "net", "io-util"] }
+tokio-stream = "0.1"
+futures = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+clap = { version = "4", features = ["derive", "env"] }
+uuid = { version = "1", features = ["v7", "serde"] }
+hex = "0.4"
+sha2 = "0.10"
+ed25519-dalek = { version = "2.1", features = ["rand_core", "pkcs8", "pem"] }
+aes-gcm = "0.10"
+rand = "0.8"
+goblin = "0.10"
+rcgen = "0.14"
+x509-parser = "0.18"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+rskafka = "0.6"
+tempfile = "3"
+bytes = "1"

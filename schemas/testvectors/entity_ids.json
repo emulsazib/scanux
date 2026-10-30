@@ -1,0 +1,47 @@
+{
+  "_doc": "entity_id(kind, tenant, device, natural) = kind + '_' + sha256(f'{tenant}|{device}|{natural}').hex()[:32]. file natural keys are lowercased; dns/sock/host are tenant-wide (device='').",
+  "vectors": [
+    {
+      "kind": "proc",
+      "tenant": "t-1",
+      "device": "dev-1",
+      "natural": "4242:1700000000123",
+      "id": "proc_cc3b7126989993fa460e772a084e654b"
+    },
+    {
+      "kind": "file",
+      "tenant": "t-1",
+      "device": "dev-1",
+      "natural": "c:\\users\\<u:1a2b3c4d>\\appdata\\local\\temp\\upd.exe",
+      "id": "file_36a8a71f1e54619cc749bd9ab285b7dc"
+    },
+    {
+      "kind": "dns",
+      "tenant": "t-1",
+      "device": "",
+      "natural": "xjw3kq9zr7vtp2.com",
+      "id": "dns_cbf085c19925afff9150f771c8942f99"
+    },
+    {
+      "kind": "sock",
+      "tenant": "t-1",
+      "device": "",
+      "natural": "203.0.113.66:443",
+      "id": "sock_e3a628b6d3ff2b4d770a0d88519aeb9f"
+    },
+    {
+      "kind": "host",
+      "tenant": "t-1",
+      "device": "",
+      "natural": "dev-1",
+      "id": "host_6219e67d43c254f7ad444c243f7671f3"
+    },
+    {
+      "kind": "user",
+      "tenant": "t-1",
+      "device": "dev-1",
+      "natural": "u:1a2b3c4d",
+      "id": "user_337999b3e2eb46cc355aee8e953c7ebf"
+    }
+  ]
+}

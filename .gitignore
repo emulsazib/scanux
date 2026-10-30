@@ -1,0 +1,12 @@
+/target
+.data/
+deploy/pki/out/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+node_modules/
+web/.next/
+desktop/src-tauri/target/
+edge-ml/models/*.onnx
+edge-ml/models/*.bloom
+*.DS_Store

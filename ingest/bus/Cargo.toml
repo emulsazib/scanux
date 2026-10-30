@@ -1,0 +1,13 @@
+[package]
+name = "ingest-bus"
+description = "Minimal Kafka (Redpanda) produce/consume wrapper shared by gateway and writers"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+rskafka.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["clock"] }

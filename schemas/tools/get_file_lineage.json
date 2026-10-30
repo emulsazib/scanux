@@ -1,0 +1,14 @@
+{
+  "type": "function",
+  "name": "get_file_lineage",
+  "description": "Return processes that created, wrote, read, renamed, or executed a file entity. Read-only.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["file_entity_id"],
+    "properties": {
+      "file_entity_id": {"type": "string", "pattern": "^file_[0-9a-f]{32}$"}
+    }
+  }
+}

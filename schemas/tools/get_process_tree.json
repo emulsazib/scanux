@@ -1,0 +1,15 @@
+{
+  "type": "function",
+  "name": "get_process_tree",
+  "description": "Return ancestors and descendants (max depth 4) of a process entity in the current incident's tenant graph. Read-only.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["process_entity_id", "depth"],
+    "properties": {
+      "process_entity_id": {"type": "string", "pattern": "^proc_[0-9a-f]{32}$"},
+      "depth": {"type": "integer", "minimum": 1, "maximum": 4}
+    }
+  }
+}

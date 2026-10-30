@@ -1,0 +1,14 @@
+{
+  "type": "function",
+  "name": "get_network_peers",
+  "description": "Return remote endpoints and DNS names contacted by a process entity, with byte counts and connection timing statistics. Read-only.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["process_entity_id"],
+    "properties": {
+      "process_entity_id": {"type": "string", "pattern": "^proc_[0-9a-f]{32}$"}
+    }
+  }
+}

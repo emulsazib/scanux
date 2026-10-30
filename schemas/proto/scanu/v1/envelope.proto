@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// One normalized telemetry event. The OCSF payload is attacker-influenced
+// (file names, command lines, DNS names) and must be treated as untrusted data.
+message EventEnvelope {
+  // UUIDv7, generated on the endpoint.
+  string event_id = 1;
+  // Set by the sensor for local bookkeeping; the gateway overwrites it with the
+  // identity from the client certificate and never trusts this value.
+  string device_id = 2;
+  google.protobuf.Timestamp observed_at = 3;
+  // OCSF class_uid: 1001 File System Activity, 1007 Process Activity,
+  // 4001 Network Activity, 4003 DNS Activity, 3002 Authentication, ...
+  uint32 ocsf_class_uid = 4;
+  // UTF-8 JSON of a single OCSF event (version pinned in schemas/ocsf/VERSION).
+  bytes ocsf_json = 5;
+  // Monotonic per device. Gaps indicate loss or tampering.
+  uint64 seq = 6;
+  Priority priority = 7;
+}
+
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  // Bulk telemetry; first to be evicted from the spool.
+  PRIORITY_BULK = 1;
+  // Detection-relevant (exec, network connect, auth).
+  PRIORITY_SIGNAL = 2;
+  // Tied to an alert or Tier-1 action; never evicted before lower priorities.
+  PRIORITY_CRITICAL = 3;
+}
+
+message EventBatch {
+  repeated EventEnvelope events = 1;
+  // Number of events the sensor dropped (spool eviction, driver ring overflow)
+  // since the previous batch.
+  uint64 dropped_since_last = 2;
+}

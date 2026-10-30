@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "scanu/v1/alert.proto";
+import "scanu/v1/command.proto";
+import "scanu/v1/envelope.proto";
+import "scanu/v1/hitl.proto";
+import "scanu/v1/scan.proto";
+
+// Sensor <-> cloud link. mTLS only; identity comes from the client certificate.
+service SensorLinkService {
+  // Long-lived bidirectional stream. The sensor sends telemetry, alerts, and
+  // command results; the cloud sends signed commands and prompts.
+  rpc Stream(stream StreamRequest) returns (stream StreamResponse);
+  // Certificate renewal: CSR signed by the device's TPM-resident key.
+  rpc Enroll(EnrollRequest) returns (EnrollResponse);
+}
+
+message Hello {
+  string sensor_version = 1;
+  string os = 2;
+  string os_version = 3;
+  // Highest seq the sensor has persisted, so the gateway can detect gaps.
+  uint64 last_seq = 4;
+  string edge_model_version = 5;
+}
+
+message Heartbeat {
+  uint64 seq = 1;
+  float cpu_percent = 2;
+  uint64 rss_bytes = 3;
+  bool driver_connected = 4;
+}
+
+message StreamRequest {
+  oneof msg {
+    Hello hello = 1;
+    EventBatch batch = 2;
+    Alert alert = 3;
+    CommandResult command_result = 4;
+    Heartbeat heartbeat = 5;
+    ScanProgress scan_progress = 6;
+  }
+}
+
+message StreamResponse {
+  oneof msg {
+    SignedCommand command = 1;
+    HitlPrompt prompt = 2;
+    // Highest seq durably accepted; the sensor may trim its spool up to here.
+    uint64 ack_seq = 3;
+  }
+}
+
+message EnrollRequest {
+  // PKCS#10 DER.
+  bytes csr_der = 1;
+}
+
+message EnrollResponse {
+  // Leaf certificate followed by the issuing chain, DER.
+  repeated bytes cert_chain_der = 1;
+}

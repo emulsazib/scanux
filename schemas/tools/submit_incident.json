@@ -1,0 +1,27 @@
+{
+  "type": "function",
+  "name": "submit_incident",
+  "description": "Finish correlation: declare which graph entities form one incident and explain it in plain language for a non-expert user.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["title", "severity", "narrative", "member_entity_ids", "attack_techniques"],
+    "properties": {
+      "title": {"type": "string"},
+      "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+      "narrative": {"type": "string"},
+      "member_entity_ids": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 64,
+        "items": {"type": "string", "pattern": "^(proc|file|sock|host|user|dns)_[0-9a-f]{32}$"}
+      },
+      "attack_techniques": {
+        "type": "array",
+        "maxItems": 12,
+        "items": {"type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$"}
+      }
+    }
+  }
+}

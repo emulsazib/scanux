@@ -1,0 +1,9 @@
+[package]
+name = "sensor-macos"
+description = "macOS backend (post-MVP): EndpointSecurity AUTH events, NetworkExtension content filter"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+sensor-core.workspace = true

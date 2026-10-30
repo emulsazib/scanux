@@ -1,0 +1,24 @@
+[package]
+name = "edge-ml"
+description = "On-device static analysis: SHA-256, bloom, PE/ELF features, classifier, YARA-X"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# ONNX Runtime scorer for the trained LightGBM model (downloads ORT binaries at build time).
+onnx = ["dep:ort", "dep:ndarray"]
+# YARA-X rule matching (large compile; enabled in sensor release builds).
+yara = ["dep:yara-x"]
+
+[dependencies]
+goblin.workspace = true
+sha2.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+ort = { version = "=2.0.0-rc.10", optional = true, features = ["ndarray"] }
+ndarray = { version = "0.16", optional = true }
+yara-x = { version = "1", optional = true, default-features = false, features = ["pe-module", "elf-module", "hash-module", "math-module", "string-module"] }

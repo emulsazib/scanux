@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;family=Space+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-container":"#1e201f","on-secondary":"#003919","outline":"#8f937c","background":"#121413","on-secondary-fixed":"#00210c","tertiary":"#5af3dd","surface-container-high":"#282a29","outline-variant":"#454935","error-container":"#93000a","on-background":"#e2e3e0","primary-fixed":"#caf246","secondary-fixed-dim":"#4de082","tertiary-container":"#31d6c1","error":"#ffb4ab","on-tertiary-container":"#00584f","on-primary":"#293500","surface-dim":"#121413","on-tertiary-fixed-variant":"#005047","on-tertiary":"#003731","on-primary-container":"#435500","surface-tint":"#afd528","on-primary-fixed":"#171e00","secondary":"#4de082","surface":"#121413","primary-container":"#a9ce20","on-primary-fixed-variant":"#3d4d00","primary-fixed-dim":"#afd528","inverse-primary":"#516600","surface-variant":"#333534","inverse-on-surface":"#2f312f","surface-bright":"#383a38","secondary-container":"#00b55d","tertiary-fixed":"#62fae3","on-secondary-fixed-variant":"#005227","tertiary-fixed-dim":"#3cddc7","inverse-surface":"#e2e3e0","surface-container-low":"#1a1c1b","on-surface":"#e2e3e0","on-secondary-container":"#003e1c","secondary-fixed":"#6dfe9c","surface-container-lowest":"#0d0f0e","on-tertiary-fixed":"#00201c","on-error-container":"#ffdad6","on-error":"#690005","surface-container-highest":"#333534","on-surface-variant":"#c5c9af","primary":"#c4eb40"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xs":"0.25rem","gutter-desktop":"1.25rem","space-xl":"2rem","margin":"1rem","space-lg":"1.5rem","margin-desktop":"1.75rem","space-md":"1rem","gutter":"1rem","space-sm":"0.5rem"},fontFamily:{"display":["Space Grotesk"],"body-lg":["Geist"],"headline-md":["Space Grotesk"],"body-md":["Geist"],"mono-lg":["JetBrains Mono"],"body-sm":["Geist"],"headline-sm":["Space Grotesk"],"mono-md":["JetBrains Mono"],"label-caps":["JetBrains Mono"],"headline-lg":["Space Grotesk"]},fontSize:{"display":["48px",{lineHeight:"56px",letterSpacing:"-0.03em",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"400"}],"headline-md":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"500"}],"body-md":["14px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"400"}],"mono-lg":["14px",{lineHeight:"20px",letterSpacing:"-0.02em",fontWeight:"500"}],"body-sm":["12px",{lineHeight:"18px",letterSpacing:"0.01em",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"26px",letterSpacing:"0em",fontWeight:"500"}],"mono-md":["12px",{lineHeight:"16px",letterSpacing:"-0.01em",fontWeight:"500"}],"label-caps":["11px",{lineHeight:"14px",letterSpacing:"0.08em",fontWeight:"600"}],"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 left-0 right-0 z-50 h-14 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline-variant flex items-center justify-between px-margin-desktop select-none"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded-full bg-error border border-error-container inline-block"></span><span class="w-3 h-3 rounded-full bg-primary-fixed-dim/60 border border-outline-variant inline-block"></span><span class="w-3 h-3 rounded-full bg-secondary-container/80 border border-outline-variant inline-block"></span></div><div class="h-4 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[18px]">terminal</span><span class="font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant">BioSec//Node-01</span></div></div><nav class="hidden lg:flex items-center h-full" data-active-classes="bg-surface-container-high text-primary border-b border-primary font-mono-md"><a class="h-full px-space-md flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors font-mono-md text-mono-md" data-path="diagnostics-and-scan" href="#">Diagnostics &amp; Scan</a><a class="h-full px-space-md flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors font-mono-md text-mono-md" data-path="threat-quarantine" href="#">Threat Quarantine</a><a class="h-full px-space-md flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors font-mono-md text-mono-md" data-path="telemetry-and-network" href="#">Telemetry &amp; Network</a><a aria-current="page" class="h-full px-space-md flex items-center transition-colors bg-surface-container-high text-primary border-b border-primary font-mono-md" data-path="security-rules" href="#">Security Rules</a><a class="h-full px-space-md flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors font-mono-md text-mono-md" data-path="settings" href="#">Settings</a></nav><div class="flex items-center gap-space-md"><div class="hidden sm:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span class="font-label-caps text-label-caps text-primary uppercase">LIVE_FEED</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><aside class="fixed left-0 top-14 bottom-0 w-64 bg-surface-container-low/95 backdrop-blur-xl border-r border-outline-variant z-40 flex flex-col justify-between p-space-md"><div class="flex flex-col gap-space-lg"><div class="flex flex-col gap-space-xs"><span class="font-label-caps text-label-caps uppercase text-on-surface-variant">SecOps Command</span><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Vitals Control</span></div><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-mono-md font-semibold"><a class="flex items-center px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-mono-md text-mono-md" data-path="diagnostics-and-scan" href="#">Diagnostics &amp; Scan</a><a class="flex items-center px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-mono-md text-mono-md" data-path="threat-quarantine" href="#">Threat Quarantine</a><a class="flex items-center px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-mono-md text-mono-md" data-path="telemetry-and-network" href="#">Telemetry &amp; Network</a><a aria-current="page" class="flex items-center px-space-sm py-space-sm rounded transition-colors bg-primary-container text-on-primary-container font-mono-md font-semibold" data-path="security-rules" href="#">Security Rules</a><a class="flex items-center px-space-sm py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-mono-md text-mono-md" data-path="settings" href="#">Settings</a></nav></div><div class="flex flex-col gap-space-xs p-space-sm rounded bg-surface-container-lowest border border-outline-variant"><div class="flex items-center justify-between"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Kernel Daemon</span><span class="font-label-caps text-label-caps text-primary">99.98%</span></div><div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-primary w-4/5"></div></div></div></aside><div class="pl-64"><main class="w-full pt-14 px-margin-desktop bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="relative py-space-lg flex flex-col gap-space-lg max-w-[1560px] mx-auto w-full">
+<!-- Ambient Luminous Glow Underlay -->
+<div class="absolute -top-12 right-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="absolute top-96 left-12 w-80 h-80 bg-tertiary-container/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<!-- 1. Header Zone -->
+<section class="flex flex-col gap-space-md bg-surface-container-lowest/80 backdrop-blur-xl p-space-lg rounded-xl shadow-xl">
+<!-- Breadcrumb / System Identifier Row -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-caps text-label-caps tracking-widest text-primary uppercase">KERNEL HOOK ARCHITECTURE</span>
+<span class="text-outline-variant font-mono-md">/</span>
+<span class="font-label-caps text-label-caps tracking-widest text-on-surface-variant uppercase">ZERO-TRUST PERMISSION MATRIX</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low shadow-sm">
+<span class="material-symbols-outlined text-primary text-[15px]">verified_user</span>
+<span class="font-mono-md text-mono-md text-on-surface-variant">Hardware Root of Trust:</span>
+<span class="font-mono-md text-mono-md text-primary font-semibold">Active (TPM 2.0 PCR-7 Validated)</span>
+</div>
+</div>
+<!-- Main Headline & Actions -->
+<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-semibold tracking-tight">
+            OS Subsystem &amp; Privilege Control
+          </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Manage kernel-level hooks, local hardware binding, and zero-trust biometric authorization gates. Real-time Ring-0 filter telemetry and immutable tamper mitigation.
+          </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-all active:scale-[0.98] shadow-sm" id="btn-audit">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">policy</span>
+<span class="font-mono-md text-mono-md uppercase tracking-wider">Audit Hook Integrity</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary font-semibold transition-all shadow-lg shadow-primary/20 active:scale-[0.98]" id="btn-elevate">
+<span class="material-symbols-outlined text-[18px]">fingerprint</span>
+<span class="font-mono-md text-mono-md tracking-wider">Elevate Session (Biometric Gate)</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 2. Top Quick Summary Cards (3-column Mini Telemetry Strip) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Mini Telemetry 1 -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex items-center justify-between shadow-sm relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Hook Telemetry</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">
+            4 Active Kernel Drivers
+          </div>
+<div class="font-mono-md text-mono-md text-primary flex items-center gap-space-xs mt-0.5">
+<span class="material-symbols-outlined text-[14px]">speed</span>
+<span>Overhead: &lt;0.04ms (Ring-0)</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:scale-105 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">memory</span>
+</div>
+</div>
+<!-- Mini Telemetry 2 -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex items-center justify-between shadow-sm relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Tamper Immunity</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">
+            PPL WinTcb / ELAM
+          </div>
+<div class="font-mono-md text-mono-md text-secondary flex items-center gap-space-xs mt-0.5">
+<span class="material-symbols-outlined text-[14px]">security</span>
+<span>Early-Launch Antimalware Signed</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-secondary group-hover:scale-105 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">shield_lock</span>
+</div>
+</div>
+<!-- Mini Telemetry 3 -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex items-center justify-between shadow-sm relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Biometric Gate</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">
+            Hardware Enclave Bound
+          </div>
+<div class="font-mono-md text-mono-md text-tertiary flex items-center gap-space-xs mt-0.5">
+<span class="material-symbols-outlined text-[14px]">passkey</span>
+<span>Windows Hello &amp; TouchID Ready</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-tertiary group-hover:scale-105 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">fingerprint</span>
+</div>
+</div>
+</section>
+<!-- 3. Core Permission Matrix (Structured List of Rich Cards) -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">tune</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Core Kernel Hooks &amp; Privileged Enclaves</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">4 SUBSYSTEMS REGISTERED</span>
+</div>
+<!-- Row 1: WFP / eBPF Network Hook -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-lg flex flex-col gap-space-md hover:bg-surface-container/70 transition-all">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[22px]">lan</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  Windows Filtering Platform (WFP) / eBPF Network Hook
+                </span>
+<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  Active (Kernel Mode)
+                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+                Allows real-time packet filtering, deep layer-7 inspection, and per-PID socket isolation before network stack dispatch. Bypasses userland hooks to intercept zero-day egress attempts.
+              </p>
+</div>
+</div>
+<!-- Controls Zone -->
+<div class="flex items-center flex-wrap gap-space-md self-end lg:self-center pl-14 lg:pl-0">
+<div class="flex items-center gap-2 px-space-sm py-1.5 rounded bg-surface-container-lowest">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">rule</span>
+<span class="font-mono-md text-mono-md text-on-surface">Strict L7 Inspection</span>
+<button class="text-primary hover:text-primary-fixed ml-1">
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<!-- Lock Switch with Tooltip Badge -->
+<div class="flex items-center gap-space-sm bg-surface-container px-space-sm py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+<div class="flex flex-col">
+<span class="font-mono-md text-mono-md text-on-surface font-semibold leading-tight">Locked</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Biometric Auth Required</span>
+</div>
+<div class="w-8 h-4 rounded-full bg-primary/20 flex items-center p-0.5 ml-2 cursor-not-allowed">
+<div class="w-3 h-3 rounded-full bg-primary ml-auto shadow"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Strip Under Row -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs bg-surface-container-lowest/50 px-space-md py-2 rounded-lg">
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Driver:</span>
+<span class="text-on-surface">netfilter_ebpf.sys</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Drop Rate:</span>
+<span class="text-secondary font-semibold">0.00%</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Execution Privilege:</span>
+<span class="text-primary">Ring 0 Active</span>
+</div>
+<div class="ml-auto hidden sm:flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-secondary">trending_up</span>
+<span>48,290 pps processed</span>
+</div>
+</div>
+</div>
+<!-- Row 2: File System Minifilter / fanotify Hook -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-lg flex flex-col gap-space-md hover:bg-surface-container/70 transition-all">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[22px]">folder_supervised</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  File System Minifilter / fanotify Hook
+                </span>
+<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Active &amp; Protected
+                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+                Intercepts pre/post file I/O operations and deploys autonomous heuristic ransomware canary traps at filesystem mountpoints. Blocks unprivileged mass-encryption attempts instantenously.
+              </p>
+</div>
+</div>
+<!-- Controls Zone -->
+<div class="flex items-center flex-wrap gap-space-md self-end lg:self-center pl-14 lg:pl-0">
+<button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-md text-mono-md transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary">crisis_alert</span>
+<span>Manage Canary Tokens</span>
+</button>
+<!-- Enforced Toggle Switch -->
+<div class="flex items-center gap-space-sm bg-surface-container px-space-sm py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[18px]">shield</span>
+<span class="font-mono-md text-mono-md text-on-surface font-semibold">Enforced</span>
+<div class="w-8 h-4 rounded-full bg-secondary/20 flex items-center p-0.5 ml-2 cursor-pointer">
+<div class="w-3 h-3 rounded-full bg-secondary ml-auto shadow"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Strip Under Row -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs bg-surface-container-lowest/50 px-space-md py-2 rounded-lg">
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Altitude:</span>
+<span class="text-on-surface font-mono-md">320010 (FSFilter Anti-Virus)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Mount:</span>
+<span class="text-primary">All Volumes Monitored</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">I/O Interception:</span>
+<span class="text-on-surface">IRP_MJ_CREATE, IRP_MJ_WRITE</span>
+</div>
+<div class="ml-auto hidden sm:flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-secondary font-semibold">1,024 Traps Placed</span>
+</div>
+</div>
+</div>
+<!-- Row 3: Hardware-Backed TPM 2.0 / Secure Enclave mTLS -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-lg flex flex-col gap-space-md hover:bg-surface-container/70 transition-all">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[22px]">token</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  Hardware-Backed TPM 2.0 / Secure Enclave mTLS
+                </span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Verified &amp; Pinned
+                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+                Encrypts device identity tokens, seals cryptographic keys against cold-boot memory attacks, and authenticates zero-trust cloud handshakes using ephemeral TPM attestation quotes.
+              </p>
+</div>
+</div>
+<!-- Controls Zone -->
+<div class="flex items-center flex-wrap gap-space-md self-end lg:self-center pl-14 lg:pl-0">
+<button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-md text-mono-md transition-colors">
+<span class="material-symbols-outlined text-[16px] text-tertiary">key</span>
+<span>View Certificate Chain</span>
+</button>
+<div class="flex items-center gap-space-xs bg-surface-container-highest px-space-sm py-1.5 rounded-lg text-primary font-mono-md text-mono-md">
+<span class="material-symbols-outlined text-[16px]">lock_reset</span>
+<span>Hardware Enclave Lock (Tamper-Proof)</span>
+</div>
+</div>
+</div>
+<!-- Telemetry Strip Under Row -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs bg-surface-container-lowest/50 px-space-md py-2 rounded-lg">
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">EK/AK Cert:</span>
+<span class="text-secondary font-semibold">Validated (Hardware Fused)</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Sealed Secrets:</span>
+<span class="text-on-surface">14 Active Keys</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">PCR Bank:</span>
+<span class="text-tertiary">SHA256 (PCR 0, 2, 7, 11)</span>
+</div>
+<div class="ml-auto hidden sm:flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-on-surface">Mutual TLS 1.3 Strict</span>
+</div>
+</div>
+</div>
+<!-- Row 4: Biometric Override Gate -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-lg flex flex-col gap-space-md hover:bg-surface-container/70 transition-all">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[22px]">contactless</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  Biometric Override Gate (Windows Hello / TouchID / Polkit)
+                </span>
+<span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+                  Zero-Trust Active
+                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+                Requires strict biometric sensor confirmation before whitelisting quarantined processes, altering driver altitudes, or terminating security daemons. Eliminates session credential theft.
+              </p>
+</div>
+</div>
+<!-- Controls Zone: Interactive Biometric Toggle -->
+<div class="flex items-center self-end lg:self-center pl-14 lg:pl-0">
+<div class="cursor-pointer flex items-center gap-space-sm px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-all shadow-sm" id="toggle-biometric-container">
+<span class="material-symbols-outlined text-primary text-[20px] animate-pulse">fingerprint</span>
+<div class="flex flex-col">
+<span class="font-mono-md text-mono-md text-on-surface font-semibold">Require Biometric Verification</span>
+<span class="font-label-caps text-[10px] text-primary">All Overrides (Enabled)</span>
+</div>
+<div class="w-10 h-5 rounded-full bg-primary/25 flex items-center p-0.5 ml-2 transition-colors" id="biometric-switch">
+<div class="w-4 h-4 rounded-full bg-primary ml-auto shadow-md"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Strip Under Row -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs bg-surface-container-lowest/50 px-space-md py-2 rounded-lg">
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Fallback:</span>
+<span class="text-error font-mono-md">Passcode Prohibited</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Session Timeout:</span>
+<span class="text-primary">120s Auto-Revoke</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="text-outline">Sensor Attestation:</span>
+<span class="text-secondary">Direct Secure I/O Pipeline</span>
+</div>
+<div class="ml-auto hidden sm:flex items-center gap-space-xs font-mono-md text-mono-md text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Sensor Ready: FIDO2 / Windows Hello</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. Bottom Anti-Tamper Protection Status Card -->
+<section class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xl flex flex-col gap-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              Anti-Tamper &amp; Early Launch Telemetry
+            </h2>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">
+              Cross-Platform Unified Subsystem Trust Verification
+            </span>
+</div>
+</div>
+<!-- Real-time Heartbeat & Cryptographic Hash -->
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-1.5 rounded-lg shadow-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="font-mono-md text-mono-md text-on-surface-variant">Host Hash:</span>
+<span class="font-mono-md text-mono-md text-primary font-mono tracking-wider">c8b941...3c70f1a9</span>
+<span class="text-outline-variant font-mono-md">|</span>
+<span class="font-label-caps text-[10px] text-secondary uppercase">Integrity Verified</span>
+</div>
+</div>
+<!-- 3-Column Multi-Platform Trust Attestations Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Column 1: Windows Security State -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-on-surface font-semibold font-mono-md text-mono-md">
+<span class="material-symbols-outlined text-primary text-[18px]">desktop_windows</span>
+<span>Windows Security State</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<div class="flex flex-col gap-space-sm font-mono-md text-mono-md">
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">PPL Level</span>
+<span class="text-primary font-semibold">WinTcb (Highest)</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">ELAM Driver Cert</span>
+<span class="text-secondary font-semibold">MS Authenticode</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">Memory Integrity (HVCI)</span>
+<span class="text-primary font-semibold">Enforced (VBS Active)</span>
+</div>
+</div>
+</div>
+<!-- Column 2: macOS Kernel State -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-on-surface font-semibold font-mono-md text-mono-md">
+<span class="material-symbols-outlined text-tertiary text-[18px]">laptop_mac</span>
+<span>macOS Kernel State</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+<div class="flex flex-col gap-space-sm font-mono-md text-mono-md">
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">ESF Status</span>
+<span class="text-tertiary font-semibold">ES Client Subscribed</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">System Extension</span>
+<span class="text-secondary font-semibold">Notarized &amp; Loaded</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">SIP &amp; KTRR Policy</span>
+<span class="text-tertiary font-semibold">Full Hardening Active</span>
+</div>
+</div>
+</div>
+<!-- Column 3: Linux Subsystem State -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-on-surface font-semibold font-mono-md text-mono-md">
+<span class="material-symbols-outlined text-secondary text-[18px]">terminal</span>
+<span>Linux Subsystem State</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div class="flex flex-col gap-space-sm font-mono-md text-mono-md">
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">LSM Architecture</span>
+<span class="text-secondary font-semibold">eBPF LSM &amp; IMA Audit</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">Kernel Lockdown</span>
+<span class="text-primary font-semibold">Integrity Mode</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<span class="text-on-surface-variant">Secure Boot Shim</span>
+<span class="text-secondary font-semibold">MOK Chain Verified</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Real-time Micro Terminal Stream / Audit Footer -->
+<div class="p-space-sm bg-surface-container-high/40 rounded-lg flex flex-wrap items-center justify-between gap-space-sm text-on-surface-variant font-mono-md text-mono-md">
+<div class="flex items-center gap-space-xs">
+<span class="text-primary font-semibold">&gt;</span>
+<span>Last ring-0 attestation quote verified:</span>
+<span class="text-on-surface">1.24 seconds ago via Hardware Enclave Root</span>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-caps text-label-caps text-primary tracking-widest uppercase">ENCLAVE: SECURE</span>
+<span class="font-label-caps text-label-caps text-outline uppercase">DAEMON V4.18.2</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+<script>
+  (function() {
+    const auditBtn = document.getElementById('btn-audit');
+    if (auditBtn) {
+      auditBtn.addEventListener('click', function() {
+        const originalText = auditBtn.innerHTML;
+        auditBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin text-primary">sync</span><span class="font-mono-md text-mono-md">Auditing Ring-0...</span>';
+        setTimeout(function() {
+          auditBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-secondary">done_all</span><span class="font-mono-md text-mono-md">Integrity 100% OK</span>';
+          setTimeout(function() {
+            auditBtn.innerHTML = originalText;
+          }, 2400);
+        }, 1200);
+      });
+    }
+
+    const elevateBtn = document.getElementById('btn-elevate');
+    if (elevateBtn) {
+      elevateBtn.addEventListener('click', function() {
+        alert("Prompting Hardware Biometric Verification Gate (Windows Hello / TouchID)...");
+      });
+    }
+
+    const toggleContainer = document.getElementById('toggle-biometric-container');
+    const switchEl = document.getElementById('biometric-switch');
+    if (toggleContainer && switchEl) {
+      let isEnabled = true;
+      toggleContainer.addEventListener('click', function() {
+        isEnabled = !isEnabled;
+        if (isEnabled) {
+          switchEl.className = 'w-10 h-5 rounded-full bg-primary/25 flex items-center p-0.5 ml-2 transition-colors';
+          switchEl.innerHTML = '<div class="w-4 h-4 rounded-full bg-primary ml-auto shadow-md"></div>';
+        } else {
+          switchEl.className = 'w-10 h-5 rounded-full bg-surface-container-high flex items-center p-0.5 ml-2 transition-colors';
+          switchEl.innerHTML = '<div class="w-4 h-4 rounded-full bg-outline shadow-md"></div>';
+        }
+      });
+    }
+  })();
+</script></main></div></body></html>

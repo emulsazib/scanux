@@ -1,0 +1,14 @@
+[package]
+name = "devpki"
+description = "Generates the development PKI: CA, gateway cert, device certs (SPIFFE SAN), and the Ed25519 command-signing key"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+rcgen = { workspace = true, features = ["pem", "x509-parser"] }
+ed25519-dalek.workspace = true
+rand.workspace = true
+sha2.workspace = true
+hex.workspace = true
+clap.workspace = true

@@ -1,0 +1,10 @@
+# Code generation is driven by:
+#   Rust:   schemas/rust/build.rs (protox + tonic-prost-build, no protoc needed)
+#   Python: `make proto` (protoc --python_out into api/scanu_api/gen)
+# This file is kept for teams that prefer `buf generate`.
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/python
+    out: ../api/scanu_api/gen
+  - remote: buf.build/protocolbuffers/pyi
+    out: ../api/scanu_api/gen

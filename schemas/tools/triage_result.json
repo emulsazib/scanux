@@ -1,0 +1,19 @@
+{
+  "type": "json_schema",
+  "name": "triage_result",
+  "description": "Perception agent output for alerts the deterministic scorer could not decide.",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["keep", "category", "rationale"],
+    "properties": {
+      "keep": {"type": "boolean"},
+      "category": {
+        "type": "string",
+        "enum": ["benign_noise", "suspicious_execution", "credential_access", "c2_beacon", "exfiltration", "ransomware", "persistence", "other"]
+      },
+      "rationale": {"type": "string"}
+    }
+  }
+}

@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_LOW = 1;
+  SEVERITY_MEDIUM = 2;
+  SEVERITY_HIGH = 3;
+  SEVERITY_CRITICAL = 4;
+}
+
+enum FreezeState {
+  FREEZE_STATE_UNSPECIFIED = 0;
+  FREEZE_STATE_NONE = 1;
+  FREEZE_STATE_SUSPENDED = 2;
+  FREEZE_STATE_NET_BLOCKED = 3;
+  FREEZE_STATE_SUSPENDED_AND_NET_BLOCKED = 4;
+}
+
+// Identifies a process instance. (pid, start_time_unix_ms) guards against PID reuse.
+message ProcessRef {
+  uint32 pid = 1;
+  uint64 start_time_unix_ms = 2;
+  string image_path = 3;
+  string sha256 = 4;
+  uint32 parent_pid = 5;
+}
+
+message BloomHit {
+  string sha256 = 1;
+  string feed = 2;
+}
+
+message MlVerdict {
+  string model_version = 1;
+  float score = 2;
+  // Top contributing features, for explanations only.
+  repeated string top_features = 3;
+}
+
+message CanaryTrip {
+  string canary_id = 1;
+  // WRITE, RENAME, DELETE, SET_INFO
+  string operation = 2;
+  // Kernel-observed trip time and user-mode suspend-complete time (QPC ticks
+  // converted to microseconds), so latency can be audited.
+  uint64 trip_us = 3;
+  uint64 frozen_us = 4;
+}
+
+message YaraMatch {
+  repeated string rules = 1;
+}
+
+// Streaming detectors (DGA, beaconing, mass modification, credential-store access, script content).
+message Heuristic {
+  // e.g. dns_dga, dns_tunnel, beacon, mass_modify, credential_store_access, script_download_exec
+  string name = 1;
+  float score = 2;
+  // Short machine-generated detail (never free text from telemetry).
+  string detail = 3;
+}
+
+message Alert {
+  string alert_id = 1;
+  string device_id = 2;
+  repeated string event_ids = 3;
+  Severity severity = 4;
+  float confidence = 5;
+  google.protobuf.Timestamp raised_at = 6;
+
+  oneof reason {
+    BloomHit bloom = 10;
+    MlVerdict ml = 11;
+    CanaryTrip canary = 12;
+    YaraMatch yara = 13;
+    Heuristic heuristic = 14;
+  }
+
+  // Tier-1 action already taken locally, if any.
+  FreezeState tier1 = 20;
+  ProcessRef process = 21;
+  // File that triggered the verdict, if any.
+  string file_path = 22;
+  string file_sha256 = 23;
+  // Set when the alert came from an on-demand scan (file at rest, not running).
+  string scan_id = 24;
+}

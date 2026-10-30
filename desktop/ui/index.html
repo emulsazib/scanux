@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scanu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=JetBrains+Mono:wght@500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">SCANU</div>
+    <span id="status" class="pill ok"><span class="pulse"></span>Protected</span>
+  </header>
+
+  <main>
+    <section id="notices" aria-live="polite"></section>
+
+    <section class="card scan">
+      <div class="row between">
+        <h2>Scan this PC</h2>
+        <select id="device" aria-label="Device"></select>
+      </div>
+      <div class="choices two">
+        <button class="btn primary" data-scope="quick">Quick scan</button>
+        <button class="btn" data-scope="full">Full system scan</button>
+      </div>
+      <div id="scan-status" class="scan-status" aria-live="polite" hidden>
+        <div class="row between"><span id="scan-label" class="pill ok"></span><button id="scan-cancel" class="btn danger small">Cancel</button></div>
+        <div class="bar"><span></span></div>
+        <div id="scan-stats" class="stats"></div>
+      </div>
+      <div id="scan-last" class="muted"></div>
+    </section>
+
+    <h1>Decisions waiting</h1>
+    <p class="muted">Scanu pauses dangerous programs on its own. Anything that deletes or kills waits for you.</p>
+    <div id="prompts"></div>
+    <div id="empty" class="empty" hidden>Nothing needs your attention.</div>
+  </main>
+
+  <footer>
+    <details>
+      <summary class="label">Settings</summary>
+      <div id="who" class="muted"></div>
+      <label>API URL <input id="api" spellcheck="false" inputmode="url" /></label>
+      <label>Access token <input id="token" type="password" autocomplete="off" /></label>
+      <div class="row"><button id="save" class="btn primary">Save &amp; test</button><span id="conn-msg" class="muted"></span></div>
+      <p class="muted">Profile, email and notification preferences are edited in the web console under Settings.</p>
+    </details>
+  </footer>
+  <template id="prompt-tpl">
+    <article class="card">
+      <div class="row"><span class="pill sev"></span><span class="title"></span></div>
+      <p class="why"></p>
+      <div class="choices">
+        <button class="btn primary" data-choice="terminate_and_quarantine">Terminate &amp; Quarantine</button>
+        <button class="btn" data-choice="isolate_network_only">Isolate Network Only</button>
+        <button class="btn" data-choice="allow_and_whitelist">Allow &amp; Whitelist</button>
+      </div>
+      <div class="result muted" role="status"></div>
+    </article>
+  </template>
+  <script src="app.js"></script>
+</body>
+</html>

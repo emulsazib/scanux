@@ -1,0 +1,97 @@
+/*
+ * Obsidian Telemetry: design tokens from design/scanu_design/DESIGN.md.
+ * Dark-first by design (zero-glare monitoring). Tailwind v4 reads @theme.
+ */
+@theme {
+  --color-void: #0a0c0b;            /* canvas, level 0 */
+  --color-surface: #121715;         /* cards, level 1 */
+  --color-raised: #171e1b;          /* drawers, level 2 */
+  --color-stroke: #1e2623;
+  --color-stroke-strong: #28332f;
+  --color-ink: #e1e8e4;
+  --color-muted: #8a9e94;
+  --color-faint: #4b5e55;
+  --color-primary: #a9ce20;         /* active / decisive */
+  --color-primary-hover: #bde42b;
+  --color-secondary: #4ade80;       /* nominal / verified */
+  --color-tertiary: #2dd4bf;        /* streams / network */
+  --color-critical: #ef4444;
+  --color-warning: #f59e0b;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-card: 16px;
+  --radius-control: 8px;
+  --shadow-float: 0 8px 32px -4px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 16px -2px rgba(169, 206, 32, 0.25);
+}
+
+@layer base {
+  html { color-scheme: dark; }
+  body {
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .label-caps {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-stroke);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-float);
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 22px; padding: 0 10px; border-radius: 9999px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+    border: 1px solid var(--color-stroke); color: var(--color-muted);
+    background: rgba(75, 94, 85, 0.15);
+  }
+  .pill-ok { color: var(--color-primary); background: rgba(169, 206, 32, 0.12); border-color: rgba(169, 206, 32, 0.35); }
+  .pill-good { color: var(--color-secondary); background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.35); }
+  .pill-warn { color: var(--color-warning); background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); }
+  .pill-crit { color: var(--color-critical); background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); }
+  .pill-info { color: var(--color-tertiary); background: rgba(45, 212, 191, 0.1); border-color: rgba(45, 212, 191, 0.35); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 36px; padding: 0 14px; border-radius: var(--radius-control);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    border: 1px solid var(--color-stroke); color: var(--color-primary); background: transparent;
+    transition: background 120ms, border-color 120ms, box-shadow 120ms;
+    cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { background: rgba(169, 206, 32, 0.08); border-color: var(--color-primary); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-primary); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: var(--color-primary); color: var(--color-void); border-color: transparent; }
+  .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); box-shadow: 0 0 12px rgba(169, 206, 32, 0.35); }
+  .btn-danger { color: var(--color-critical); }
+  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: var(--color-critical); }
+  .pulse { position: relative; width: 6px; height: 6px; border-radius: 9999px; background: currentColor; flex: none; }
+  .pulse::after {
+    content: ""; position: absolute; inset: 0; border-radius: 9999px; background: currentColor;
+    animation: pulse-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  @keyframes pulse-ping { 75%, 100% { transform: scale(2.6); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .pulse::after { animation: none; } }
+}
+
+@keyframes scan-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}

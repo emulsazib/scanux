@@ -1,0 +1,63 @@
+# Dev infrastructure only; Scanu services run on the host (see Makefile).
+name: scanu-dev
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: scanu
+      POSTGRES_PASSWORD: scanu-dev
+      POSTGRES_DB: scanu
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/00-roles.sql:ro
+      - pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scanu"]
+      interval: 2s
+      retries: 30
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    environment:
+      CLICKHOUSE_USER: scanu
+      CLICKHOUSE_PASSWORD: scanu-dev
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports: ["127.0.0.1:8123:8123"]
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes: [ch:/var/lib/clickhouse]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8123/ping"]
+      interval: 2s
+      retries: 30
+
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH: neo4j/scanu-dev-pass
+      NEO4J_server_memory_heap_max__size: 1G
+    ports: ["127.0.0.1:7474:7474", "127.0.0.1:7687:7687"]
+    volumes: [neo4j:/data]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7474 || exit 1"]
+      interval: 3s
+      retries: 40
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://127.0.0.1:19092
+      - --smp=1
+      - --memory=1G
+      - --mode=dev-container
+    ports: ["127.0.0.1:19092:19092"]
+    volumes: [redpanda:/var/lib/redpanda/data]
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 3s
+      retries: 40
+
+volumes: { pg: {}, ch: {}, neo4j: {}, redpanda: {} }

@@ -1,0 +1,28 @@
+[package]
+name = "sensor-svc"
+description = "scanu-sensor: the Windows service (LocalSystem) hosting the engine"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "scanu-sensor"
+path = "src/main.rs"
+
+[dependencies]
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+engine.workspace = true
+sensor-core.workspace = true
+sensor-win = { path = "../sensor-win" }
+edge-ml.workspace = true
+vault.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+ed25519-dalek.workspace = true
+sha2.workspace = true
+windows-service = "0.8"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Storage_FileSystem", "Win32_System_Performance", "Win32_System_Pipes"] }

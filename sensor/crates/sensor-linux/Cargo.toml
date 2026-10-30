@@ -1,0 +1,9 @@
+[package]
+name = "sensor-linux"
+description = "Linux backend (post-MVP): eBPF via Aya, fanotify permission events, cgroup network isolation"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+sensor-core.workspace = true

@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "google/protobuf/timestamp.proto";
+import "scanu/v1/alert.proto";
+import "scanu/v1/scan.proto";
+
+// The closed set of actions a sensor will ever execute. There is no
+// "run command" tool, and adding one requires a schema change and review.
+message SuspendProcess {
+  ProcessRef process = 1;
+}
+message ResumeProcess {
+  ProcessRef process = 1;
+}
+message TerminateProcess {
+  ProcessRef process = 1;
+}
+message BlockProcessNetwork {
+  ProcessRef process = 1;
+}
+message UnblockProcessNetwork {
+  ProcessRef process = 1;
+}
+message QuarantineFile {
+  string path = 1;
+  // Must match the file's current hash, otherwise the command fails.
+  string sha256 = 2;
+}
+message RestoreFromVault {
+  string vault_id = 1;
+}
+message AllowlistHash {
+  string sha256 = 1;
+}
+
+message RemediationCommand {
+  string command_id = 1;
+  // HITL action this command belongs to.
+  string action_id = 2;
+  string device_id = 3;
+  // The sensor rejects commands past this instant (replay window).
+  google.protobuf.Timestamp not_after = 4;
+  // Unique per key; the sensor keeps a persisted seen-set.
+  uint64 nonce = 5;
+  // HitlDecision.decision_id (or scan_id for scans). Required for every
+  // destructive tool; optional for non-destructive ones (suspend, net_block,
+  // start_scan, cancel_scan), which the sensor may also take on its own.
+  string approval_ref = 6;
+
+  oneof tool {
+    SuspendProcess suspend = 10;
+    ResumeProcess resume = 11;
+    TerminateProcess terminate = 12;
+    BlockProcessNetwork net_block = 13;
+    UnblockProcessNetwork net_unblock = 14;
+    QuarantineFile quarantine = 15;
+    RestoreFromVault restore = 16;
+    AllowlistHash allowlist = 17;
+    StartScan start_scan = 18;
+    CancelScan cancel_scan = 19;
+  }
+}
+
+// `command` is the protobuf encoding of RemediationCommand. The signature covers
+// these exact bytes, so the verifier never re-encodes.
+message SignedCommand {
+  bytes command = 1;
+  bytes ed25519_sig = 2;
+  string key_id = 3;
+}
+
+enum CommandStatus {
+  COMMAND_STATUS_UNSPECIFIED = 0;
+  COMMAND_STATUS_EXECUTED = 1;
+  COMMAND_STATUS_REJECTED = 2;
+  COMMAND_STATUS_FAILED = 3;
+}
+
+message CommandResult {
+  string command_id = 1;
+  string action_id = 2;
+  CommandStatus status = 3;
+  // Machine-readable reason, e.g. BAD_SIGNATURE, EXPIRED, REPLAY,
+  // DEVICE_MISMATCH, APPROVAL_REQUIRED, PID_REUSED, HASH_MISMATCH.
+  string reason = 4;
+  // Set by QuarantineFile, for later RestoreFromVault.
+  string vault_id = 5;
+  google.protobuf.Timestamp completed_at = 6;
+}

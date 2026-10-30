@@ -1,0 +1,29 @@
+[package]
+name = "ingest-gateway"
+description = "mTLS gRPC termination for sensors: identity from cert, Kafka produce, command fan-out"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ingest-gateway"
+path = "src/main.rs"
+
+[dependencies]
+scanu-proto.workspace = true
+prost.workspace = true
+prost-types.workspace = true
+tonic.workspace = true
+tokio.workspace = true
+tokio-stream.workspace = true
+futures.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+x509-parser.workspace = true
+ingest-bus.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+base64 = "0.22"

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// On-demand scans. Read-only on the endpoint: findings become alerts and go
+// through the normal HITL flow; a scan never quarantines on its own.
+enum ScanScope {
+  SCAN_SCOPE_UNSPECIFIED = 0;
+  // User-writable hot spots: Downloads, Desktop, Temp, AppData, Startup, ProgramData.
+  SCAN_SCOPE_QUICK = 1;
+  // Every fixed drive.
+  SCAN_SCOPE_FULL = 2;
+}
+
+message StartScan {
+  string scan_id = 1;
+  ScanScope scope = 2;
+}
+
+message CancelScan {
+  string scan_id = 1;
+}
+
+enum ScanState {
+  SCAN_STATE_UNSPECIFIED = 0;
+  SCAN_STATE_RUNNING = 1;
+  SCAN_STATE_COMPLETED = 2;
+  SCAN_STATE_CANCELLED = 3;
+  SCAN_STATE_FAILED = 4;
+}
+
+message ScanProgress {
+  string scan_id = 1;
+  ScanState state = 2;
+  // Every file visited.
+  uint64 files_seen = 3;
+  // Executables and scripts actually analyzed (hash, bloom, features, model).
+  uint64 files_analyzed = 4;
+  uint64 bytes_analyzed = 5;
+  uint64 findings = 6;
+  // Pseudonymized; machine-generated progress hint only.
+  string current_path = 7;
+  google.protobuf.Timestamp started_at = 8;
+  google.protobuf.Timestamp finished_at = 9;
+  string error = 10;
+  ScanScope scope = 11;
+}

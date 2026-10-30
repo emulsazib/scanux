@@ -1,0 +1,19 @@
+{
+  "caption": "Scanu",
+  "name": "scanu",
+  "uid": 999,
+  "version": "0.1.0",
+  "description": "Scanu extension attributes, carried under the OCSF `unmapped.scanu` object until the extension is registered.",
+  "attributes": {
+    "ml_score": {"type": "float_t", "description": "Edge classifier probability of maliciousness, 0..1."},
+    "ml_model_version": {"type": "string_t", "description": "Version of the edge model that produced ml_score."},
+    "bloom_hit": {"type": "boolean_t", "description": "SHA-256 present in the local known-bad bloom filter."},
+    "yara_rules": {"type": "string_t", "is_array": true, "description": "Matched YARA-X rule identifiers."},
+    "canary_id": {"type": "string_t", "description": "Identifier of the ransomware canary that was touched."},
+    "freeze_tier": {"type": "integer_t", "description": "1 if a Tier-1 freeze was applied locally, else 0."},
+    "process_start_time_ms": {"type": "long_t", "description": "Process creation time (unix ms); with pid forms a reuse-safe process key."},
+    "entropy": {"type": "float_t", "description": "Shannon entropy of the file (bits/byte)."},
+    "dga_score": {"type": "float_t", "description": "DNS label randomness score, 0..1."},
+    "beacon_jitter": {"type": "float_t", "description": "Coefficient of variation of connection intervals for a (pid, remote) pair."}
+  }
+}

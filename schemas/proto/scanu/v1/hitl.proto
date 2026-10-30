@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package scanu.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Tier-3 lifecycle. Allowed transitions (enforced in api/scanu_api/hitl.py):
+//   PROPOSED -> APPROVED | REJECTED
+//   APPROVED -> EXECUTED | FAILED
+//   EXECUTED -> VERIFIED | FAILED
+//   VERIFIED -> ROLLED_BACK
+//   FAILED   -> PROPOSED (retry creates a new proposal revision)
+enum ActionState {
+  ACTION_STATE_UNSPECIFIED = 0;
+  ACTION_STATE_PROPOSED = 1;
+  ACTION_STATE_APPROVED = 2;
+  ACTION_STATE_REJECTED = 3;
+  ACTION_STATE_EXECUTED = 4;
+  ACTION_STATE_VERIFIED = 5;
+  ACTION_STATE_FAILED = 6;
+  ACTION_STATE_ROLLED_BACK = 7;
+}
+
+// The three Tier-2 choices shown after a Tier-1 freeze.
+enum UserChoice {
+  USER_CHOICE_UNSPECIFIED = 0;
+  USER_CHOICE_TERMINATE_AND_QUARANTINE = 1;
+  USER_CHOICE_ISOLATE_NETWORK_ONLY = 2;
+  USER_CHOICE_ALLOW_AND_WHITELIST = 3;
+}
+
+message HitlPrompt {
+  string action_id = 1;
+  string incident_id = 2;
+  string title = 3;
+  // Plain-language "why", produced by the Remediation agent and validated.
+  string explanation = 4;
+  repeated UserChoice choices = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+message HitlDecision {
+  string decision_id = 1;
+  string action_id = 2;
+  UserChoice choice = 3;
+  string user_id = 4;
+  // desktop | web | mobile
+  string channel = 5;
+  google.protobuf.Timestamp decided_at = 6;
+  // WebAuthn assertion over action_id || choice (prevents session-theft approvals).
+  bytes webauthn_assertion = 7;
+}

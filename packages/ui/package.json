@@ -1,0 +1,7 @@
+{
+  "name": "@scanu/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Obsidian Telemetry design tokens (from design/scanu_design/DESIGN.md) shared by web and desktop",
+  "exports": { "./tokens.css": "./tokens.css" }
+}

@@ -1,0 +1,29 @@
+[package]
+name = "ingest-writers"
+description = "Kafka telemetry → ClickHouse (raw OCSF) and Neo4j (entity graph)"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ingest-writers"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+scanu-proto.workspace = true
+ingest-bus.workspace = true
+prost.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+hex.workspace = true
+reqwest.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
